@@ -1,0 +1,620 @@
+"""
+This meta analysis pipeline is set up as such:
+"""
+
+import datetime
+import fnmatch
+import re
+import os
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Union
+
+import attr
+import pandas as pd
+
+################################################################################
+# Set Up & Data Structure
+################################################################################
+# Grab the location of various things from the config
+# Input Files/Directories
+qc_input_dir: Path = Path(config["qc_input_dir"])
+metal_binary: Path = Path(config["metal_binary"])
+hapmap: Path = Path(config["hapmap"])
+ref_ld_chr: Path = Path(config["ref_ld_chr"])
+w_ld_chr: Path = Path(config["w_ld_chr"])
+map_file: Path = Path(config["map_file"])
+annovar_perl: Path = Path(config["annovar_perl"])
+cli_munge_script: Path = Path(config["cli_munge_script"])
+ldsc_script: Path = Path(config["ldsc_script"])
+ldsc_env: Path = Path(config["ldsc_env"])
+phenotype_catalog_dict: dict = config["phenotype_catalog_dict"]
+disease_prevalence_dict: dict = config["disease_prevalence_dict"]
+output_dir: Path = Path(config["output_dir"])
+humandb_dir: Path = Path(config["humandb_dir"])
+xref: Path = Path(config["xref"])
+prep_dir: Path = Path(config["prep_dir"])
+
+# Filter Params
+biobank_min: int = config["biobank_min"]
+gc: str = config["genomic_control"]
+sig_threshold: float = config["sig_threshold"]
+mac_filter: int = config["mac_filter"]
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Input:
+    """Represents all necessary meta data for each biobank gwas"""
+
+    input_files: str
+    se: str
+    pval_col: str
+    gwas_software: str
+    chrom_col: str
+    pos_col: str
+    case_count: int
+    control_count: int
+    case_count_col: Optional[str]
+    control_count_col: Optional[str]
+    total_count_col: Optional[str]
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Matrix:
+    """Represents all necessary meta data for each biobank gwas"""
+
+    input_files: List[str]
+    sample_prev: str
+    population_prev: str
+    string_files: str
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Munge:
+    """Represents necessary input data for post metal analysis"""
+
+    phenotype: str
+    case_count: Union[int, float]
+    control_count: Union[int, float]
+    sample_prevalence: float
+    total: int
+    metal_output_file: str
+    post_munge_cli: str
+    gwas_catalog: str
+    disease_prev: float
+
+
+def _find_tsv_files(directory):
+    # Grab all files that end in *aligned_results.tsv
+    tsv_files = []
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if fnmatch.fnmatch(file, "*aligned_results.tsv"):
+                tsv_files.append(os.path.join(root, file))
+    return tsv_files
+
+
+inputs: Dict[str, List[Input]] = {}
+metal: Dict[str, List[str]] = {}
+munge: Dict[str, List[Munge]] = {}
+matrix: Dict[str, List[Matrix]] = {}
+
+# Read map_df into pandas df
+map_df: pd.DataFrame = pd.read_csv(map_file, sep="\t")
+
+# Get list of files ending in "aligned_results.tsv' from input directory
+file_list: List[str] = _find_tsv_files(qc_input_dir)
+
+for index, row in map_df.iterrows():
+    unique_id = f"{row['BIOBANK']}_{row['PHENOTYPE']}_{row['SEX']}_{row['ANCESTRY']}"
+    pattern = rf".*{re.escape(unique_id)}.*"
+    input_files = []
+    for input_file in file_list:
+        match = re.findall(pattern, input_file)
+        if match:
+            input_files.append(match[0])
+
+    try:
+        # Dict of INPUT (used in metal_prep)
+        inputs[unique_id] = Input(
+            input_files=input_files[0],
+            se=row["SE"],
+            pval_col=row["PVAL"],
+            gwas_software=row["GWAS_SOFTWARE"],
+            chrom_col=row["CHROM"],
+            pos_col=row["POS"],
+            case_count=row["Case_Count"],
+            control_count=row["Control_Count"],
+            case_count_col=row["Case_N"],
+            control_count_col=row["Control_N"],
+            total_count_col=row["Total_N"],
+        )
+
+        # Make a list of input files for metal per phenotype
+        if row["PHENOTYPE"] not in metal:
+            metal[row["PHENOTYPE"]] = [f"{prep_dir}/metal_prep/{unique_id}.tsv"]
+        else:
+            metal[row["PHENOTYPE"]].append(f"{prep_dir}/metal_prep/{unique_id}.tsv")
+    except IndexError:
+        # Throw error if an expected file is not found in the provided input directory
+        print(pattern)
+        print(file_list)
+        sys.exit(1)
+
+for phenotype in list(set(map_df['PHENOTYPE'])):
+    case_total = map_df.loc[
+        map_df["PHENOTYPE"] == phenotype, "Case_Count"
+    ].sum()
+    control_total = map_df.loc[
+        map_df["PHENOTYPE"] == phenotype, "Control_Count"
+    ].sum()
+    total = case_total + control_total
+    if phenotype == "tc_vs_bng":
+        CATALOG_PHENOTYPE = "thyroid_cancer"
+    if phenotype != "tc_vs_bng":
+        CATALOG_PHENOTYPE = phenotype
+    munge[phenotype] = Munge(
+        phenotype=phenotype,
+        case_count=case_total,
+        control_count=control_total,
+        total=total,
+        sample_prevalence=case_total / control_total,
+        metal_output_file=f"{output_dir}/metal_summary/{phenotype}_raw.tsv",
+        post_munge_cli=f"{output_dir}/cli_munge/{phenotype}.sumstats.gz",
+        gwas_catalog=phenotype_catalog_dict[CATALOG_PHENOTYPE],
+        disease_prev=disease_prevalence_dict[CATALOG_PHENOTYPE],
+    )
+
+ldsc_input_files = [munge[key].post_munge_cli for key, value in munge.items()]
+
+# Set up LDSC Matrix Inputs
+for i in range(len(ldsc_input_files)):
+    start = ldsc_input_files[i]
+    others = [item for item in ldsc_input_files if item != start]
+    others.insert(0, start)
+    samp_prev = [
+        munge[Path(o).name.replace(".sumstats.gz", "")].disease_prev for o in others
+    ]
+    disease_prev = [
+        munge[Path(o).name.replace(".sumstats.gz", "")].case_count
+        / munge[Path(o).name.replace(".sumstats.gz", "")].control_count
+        for o in others
+    ]
+
+    phenotype = Path(start).name.replace(".sumstats.gz", "")
+    matrix[phenotype] = Matrix(
+        string_files=",".join(others),
+        input_files=others,
+        sample_prev=",".join(str(i) for i in samp_prev),
+        population_prev=",".join(str(i) for i in disease_prev),
+    )
+################################################################################
+# Directives
+################################################################################
+onerror:
+    """Code that gets called  if / when the snakemake pipeline exits with an error.
+    The `log` variable contains a path to the snakemake log file which can be parsed
+    for more information. Summarizes information on failed jobs and writes it to the
+    output.
+    """
+    try:
+        path = Path(log)
+        RULE_PREFIX = "Error in rule "
+        LOG_PREFIX = "    log: "
+        CMD_PREFIX = "Command "
+
+        with path.open("r") as fh:
+            lines: Iterable[str] = fh.readlines()
+
+        while lines:
+            lines = list(dropwhile(lambda l: not l.startswith(RULE_PREFIX), lines))
+            if lines:
+                rule_name = lines[0].rstrip()[len(RULE_PREFIX) : -1]
+                lines = dropwhile(lambda l: not l.startswith(LOG_PREFIX), lines)
+                log_path = Path(next(lines).rstrip()[len(LOG_PREFIX) :].split()[0])
+
+                print(f"========== Start of Error Info for {rule_name} ==========")
+                print(f"Failed rule: {rule_name}")
+                print(f"Contents of log file: {log_path}")
+                with log_path.open("r") as fh:
+                    for line in fh.readlines():
+                        print(f"    {line.rstrip()}")
+                print(f"=========== End of Error Info for {rule_name} ===========")
+    except Exception as ex:
+        print("################################################")
+        print("Exception raised in snakemake onerror handler.")
+        print(str(ex))
+        print("################################################")
+
+
+################################################################################
+# Beginning of rule declarations
+################################################################################
+rule all:
+    """
+    Default rule that is executed when snakemake runs.  The 'inputs' here list the set of files
+    that the pipeline will generate by default if a specific list isn't provided.
+    """
+    input:
+        [f'{prep_dir}/metal_prep/{key}.tsv' for key, value in inputs.items()],
+        [f'{output_dir}/metal_results/{key}.metal' for key in metal],
+        [f'{output_dir}/metal_plots/{key}.png' for key in metal],
+        [f'{output_dir}/metal_summary/{key}.tsv' for key in metal],
+        [f'{output_dir}/metal_summary/{key}_raw.tsv' for key in metal],
+        [f'{output_dir}/annovar/{key}.tsv' for key in metal],
+        [f'{output_dir}/annovar/{key}_with_genes.hg38_multianno.txt' for key in metal],
+        [f'{output_dir}/final_summary_with_genes/{key}_with_genes_and_regions.tsv' for key in metal],
+        [f'{output_dir}/metal_results/{key}_1.tbl' for key in metal],
+        [f'{output_dir}/significant_loci/{key}_significant_loci.tsv' for key, value in munge.items()],
+        [f'{output_dir}/ldsc_pre_munge/{key}_with_rsid.tsv' for key, value in munge.items()],
+        [f'{output_dir}/cli_munge/{key}.sumstats.gz' for key, value in munge.items()],
+        [f'{output_dir}/cli_ldsc/{key}.log' for key, value in munge.items()],
+        #[f'{output_dir}/cli_ldsc_matrix/{key}.log' for key, value in matrix.items()],
+
+
+
+rule prep_files:
+    params:
+        qc_files = lambda wc: inputs[wc.input].input_files,
+        se = lambda wc: inputs[wc.input].se,
+        chrom = lambda wc: inputs[wc.input].chrom_col,
+        pos = lambda wc: inputs[wc.input].pos_col,
+        case_count = lambda wc: inputs[wc.input].case_count,
+        control_count = lambda wc: inputs[wc.input].control_count,
+        pval_col = lambda wc: inputs[wc.input].pval_col,
+        ref = 'REF_gnomad',
+        alt = 'ALT_gnomad',
+        mac_filter = mac_filter,
+        case_count_col=lambda wc: inputs[wc.input].case_count_col,
+        control_count_col=lambda wc: inputs[wc.input].control_count_col,
+        total_count_col=lambda wc: inputs[wc.input].total_count_col
+    output:
+        out_prep = "{prep_dir}/metal_prep/{input}.tsv"
+    log:
+        "{prep_dir}/metal_prep/{input}_prep.log"
+    #conda:
+    #    "environment.yml"
+    shell:
+        "python modules/prep_for_metal.py "
+        "--input-file {params.qc_files} "
+        "--se {params.se} "
+        "--ea {params.alt} "
+        "--non-ea {params.ref} "
+        "--chrom-col \{params.chrom} "
+        "--pos-col {params.pos} "
+        "--case-count {params.case_count} "
+        "--case-count-col {params.case_count_col} "
+        "--control-count {params.control_count} "
+        "--control-count-col {params.control_count_col} "
+        "--total-count-col {params.total_count_col} "
+        "--pval-col {params.pval_col} "
+        "--mac-filter {params.mac_filter} "
+        "--output-path {output.out_prep} &> {log}"
+
+
+for m in metal:
+    rule:
+        name: f'write_metal_script_{m}'
+        input:
+            input_files = metal[m],
+        output:
+            metal_script_out=f'{output_dir}/metal_results/{m}.metal'
+        params:
+            metal_output=f'{output_dir}/metal_results/{m}_ .tbl',
+            gc = gc
+        log:
+            f"{output_dir}/metal_results/{m}_script.log"
+        #conda:
+        #    "environment.yml"
+        shell:
+            "python modules/make_metal_script.py "
+            "--input-files {input.input_files} "
+            "--gc {params.gc} "
+            "--metal-out '{params.metal_output}' "
+            "--output-path {output.metal_script_out}"
+
+
+for m in metal:
+    rule:
+        name: f'run_metal_{m}'
+        input:
+            metal_script = f'{output_dir}/metal_results/{m}.metal',
+            metal_binary = metal_binary,
+        output:
+            metal_out = f'{output_dir}/metal_results/{m}_1.tbl'
+        log:
+            f'{output_dir}/metal_results/{m}_metal.log'
+        #conda:
+        #    "environment.yml"
+        shell:
+            "./{input.metal_binary} {input.metal_script} &> {log}"
+
+
+for m in metal:
+    rule:
+        name: f'plot_metal_{m}'
+        params:
+            phenotype = f'{m}',
+            biobank_min = biobank_min,
+            case_n = munge[m].case_count,
+            control_n = munge[m].control_count
+        input:
+            summary = f'{output_dir}/metal_results/{m}_1.tbl',
+        output:
+            out = f'{output_dir}/metal_plots/{m}.png',
+        log:
+            f'{output_dir}/metal_plots/{m}_metal.log'
+        #conda:
+        #    "environment.yml"
+        shell:
+            "python modules/plots.py "
+            "--file-path {input.summary} "
+            "--biobank-min {params.biobank_min} "
+            "--phenotype {params.phenotype} "
+            "--cases {params.case_n} "
+            "--controls {params.control_n} "
+            "--manhattan-out {output.out} &> {log}" 
+
+for m in metal:
+    rule:
+        name: f'prep_annovar_{m}'
+        input:
+            summary = f'{output_dir}/significant_loci/{m}_significant_loci.tsv',
+        output:
+            out = f'{output_dir}/annovar/{m}.tsv',
+        log:
+            f'{output_dir}/annovar/{m}_annvoar_prep.log'
+        #conda:
+        #    "environment.yml"
+        shell:
+            "python modules/prep_for_annovar.py "
+            "--input-file {input.summary} -o {output.out} &> {log}"
+
+
+for m in metal:
+    rule:
+        name: f'run_annovar_{m}'
+        params:
+            out_prefix = f'{output_dir}/annovar/{m}_with_genes'
+        input:
+            annovar_pl = annovar_perl, 
+            humandb = humandb_dir,
+            metal_results = f'{output_dir}/annovar/{m}.tsv',
+            xref = xref
+        output:
+            out = f'{output_dir}/annovar/{m}_with_genes.hg38_multianno.txt',
+        log:
+            f'{output_dir}/annovar/{m}_run_annovar.log'
+        #conda:
+        #    "environment.yml"
+        shell:
+            "perl {input.annovar_pl} "
+            "{input.metal_results} "
+            "{input.humandb} "
+            "-buildver hg38 "
+            "-out {params.out_prefix} "
+            "-remove "
+            "-protocol refGene,cytoBand,exac03,avsnp151,dbnsfp30a "
+            "-operation gx,r,f,f,f "
+            "-nastring . "
+            "-polish "
+            "-xref {input.xref} &> {log}"
+
+
+for m in metal:
+    rule:
+        name: f'pre_ldsc_run_annovar_{m}'
+        params:
+            out_prefix = f'{output_dir}/ldsc_pre_munge/{m}'
+        input:
+            annovar_pl = annovar_perl, 
+            humandb = humandb_dir,
+            metal_results = f'{output_dir}/ldsc_pre_munge/{m}.tsv',
+        output:
+            out = f'{output_dir}/ldsc_pre_munge/{m}.hg38_multianno.txt',
+        log:
+            f'{output_dir}/ldsc_pre_munge/{m}_attach_rsids.log'
+        #conda:
+        #    "environment.yml"
+        shell:
+            "perl {input.annovar_pl} "
+            "{input.metal_results} "
+            "{input.humandb} "
+            "-buildver hg38 "
+            "-out {params.out_prefix} "
+            "-remove "
+            "-protocol avsnp151 "
+            "-operation f "
+            "-nastring . &> {log}"
+
+for m in metal:
+    rule:
+        name: f'pre_ldsc_pre_annovar_{m}'
+        input:
+            metal_results = f'{output_dir}/metal_results/{m}_1.tbl',
+        output:
+            out = f'{output_dir}/ldsc_pre_munge/{m}.tsv',
+        log:
+            f'{output_dir}/ldsc_pre_munge/{m}_pre_annovar.log'
+        #conda:
+        #    "environment.yml"
+        shell:
+            "python modules/prep_metal_for_annovar.py "
+            "-i {input.metal_results} "
+            "-o {output.out} &> {log}"
+
+
+for m in metal:
+    rule:
+        name: f'add_genes_to_significant_loci_{m}'
+        params:
+            sig_loci_id_col = 'STUDY_ID'
+        input:
+            significant_loci_results = f'{output_dir}/significant_loci/{m}_significant_loci.tsv',
+            annovar_results = f'{output_dir}/annovar/{m}_with_genes.hg38_multianno.txt',
+        output:
+            out = f'{output_dir}/final_summary_with_genes/{m}_with_genes_and_regions.tsv',
+        log:
+            f'{output_dir}/final_summary_with_genes/{m}_with_genes_and_regions.log'
+        #conda:
+        #    "environment.yml"
+        shell:
+            "python modules/add_genes.py "
+            "--significant-loci {input.significant_loci_results} "
+            "--annovar-genes {input.annovar_results} "
+            "--sig-loci-id-col {params.sig_loci_id_col} "
+            "--output {output.out} &> {log}"
+
+
+for m in metal:
+    rule:
+        name: f'summarize_metal_{m}'
+        params:
+            metal_info = f'{output_dir}/metal_results/{m}_1.tbl.info',
+            metal_input_dir = f'{prep_dir}/metal_prep',
+            biobank_min = biobank_min
+        input:
+            metal_out = f'{output_dir}/metal_results/{m}_1.tbl'
+        output:
+            summary = f'{output_dir}/metal_summary/{m}.tsv',
+            raw = f'{output_dir}/metal_summary/{m}_raw.tsv'
+        log:
+            f'{output_dir}/metal_summary/{m}_summary.log'
+        #conda:
+        #    "environment.yml"
+        shell:
+            "python modules/summary.py "
+            "--metal-input-dir {params.metal_input_dir} "
+            "--metal-results {input.metal_out} "
+            "--output {output.summary} "
+            "--output-raw {output.raw} "
+            "--biobank-min {params.biobank_min} "
+            "--info {params.metal_info}"
+
+
+rule pre_munge:
+    params:
+        cases = lambda wc: munge[wc.munge].case_count,
+        controls = lambda wc: munge[wc.munge].control_count,
+        biobank_min = biobank_min
+    input:
+        rsid_map_file = "{output_dir}/ldsc_pre_munge/{munge}.hg38_multianno.txt",
+        metal_output = "{output_dir}/metal_results/{munge}_1.tbl"
+    output:
+        out_prep = "{output_dir}/ldsc_pre_munge/{munge}_with_rsid.tsv"
+    log:
+        "{output_dir}/ldsc_pre_munge/{munge}_pre_munge.log"
+    #conda:
+    #    "environment.yml"
+    shell:
+        "python modules/prep_for_ldsc.py "
+        "--metal-results {input.metal_output} "
+        "--cases {params.cases} "
+        "--controls {params.controls} "
+        "--rsid-map {input.rsid_map_file} "
+        "--output-path {output.out_prep} "
+        "--biobank-min {params.biobank_min} &> {log}"
+
+
+rule significant_loci:
+    params:
+        sig_threshold = sig_threshold,
+        disease = lambda wc: wc.munge,
+    input:
+        phenotype_catalog_path = lambda wc: munge[wc.munge].gwas_catalog,
+        output = lambda wc: munge[wc.munge].metal_output_file
+    output:
+        out_prep = "{output_dir}/significant_loci/{munge}_significant_loci.tsv",
+    log:
+        "{output_dir}/significant_loci/{munge}_significant_loci.log"
+    #conda:
+    #    "environment.yml"
+    shell:
+        "python modules/significant_loci.py "
+        "--input-file {input.output} "
+        "--significance-threshold {params.sig_threshold} "
+        "--phenotype-catalog-path {input.phenotype_catalog_path} "
+        "--output-path {output.out_prep} &> {log}"
+
+
+rule cli_munge:
+    params:
+        out_path = lambda wc: f"{output_dir}/cli_munge/{wc.munge}",
+        total_n = lambda wc: munge[wc.munge].total,
+    input:
+        cli_munge_script = cli_munge_script,
+        pre_munge_output = '{output_dir}/ldsc_pre_munge/{munge}_with_rsid.tsv',
+        hapmap = hapmap
+    output:
+        munge = "{output_dir}/cli_munge/{munge}.sumstats.gz"
+    log:
+        "{output_dir}/cli_munge/{munge}_munge.log"
+    conda:
+        ldsc_env
+    shell:
+        "python2 {input.cli_munge_script} "
+        "--sumstats {input.pre_munge_output} "
+        "--merge-alleles {input.hapmap} "
+        "--chunksize 500000 "
+        "--N-col N "
+        "--a1 A1 "
+        "--a2 A2 "
+        "--p Pval "
+        "--signed-sumstats OR,1 "
+        "--frq EAF "
+        "--out {params.out_path} &> {log}"
+
+
+rule cli_ldsc:
+    params:
+        out_dir = lambda wc: f"{output_dir}/cli_ldsc/{wc.munge}",
+        pop_prev = lambda wc: munge[wc.munge].disease_prev,
+        samp_prev = lambda wc: munge[wc.munge].sample_prevalence,
+    input:
+        ldsc_script = ldsc_script,
+        ref_ld_chr = ref_ld_chr,
+        w_ld_chr = w_ld_chr,
+        sumstat = "{output_dir}/cli_munge/{munge}.sumstats.gz",
+        hapmap = hapmap
+    output:
+        ldsc = "{output_dir}/cli_ldsc/{munge}.log"
+    conda:
+        ldsc_env
+    log:
+        "{output_dir}/cli_ldsc/{munge}_ldsc.log"
+    shell:
+        "python2 {input.ldsc_script} "
+        "--h2 {input.sumstat} "
+        "--ref-ld-chr {input.w_ld_chr}/ "
+        "--w-ld-chr {input.w_ld_chr}/ "
+        "--samp-prev {params.samp_prev} "
+        "--pop-prev {params.pop_prev} "
+        "--out {params.out_dir}"
+
+
+rule ldsc_matrix:
+    input:
+        input_files = lambda wc: matrix[wc.item].input_files,
+        ref_ld_chr = ref_ld_chr,
+        w_ld_chr = w_ld_chr,
+        ldsc_script = ldsc_script
+    params:
+        out_dir = lambda wc: f'{output_dir}/cli_ldsc_matrix/{wc.item}',
+        test = lambda wc: matrix[wc.item].string_files,
+        samp_prev = lambda wc: matrix[wc.item].sample_prev,
+        pop_prev = lambda wc: matrix[wc.item].population_prev,
+    output:
+        rdata = '{output_dir}/cli_ldsc_matrix/{item}.log',
+    log:
+        "{output_dir}/cli_ldsc_matrix/{item}_ldsc.log"
+    conda:
+        ldsc_env
+    shell:
+        "python2 {input.ldsc_script} "
+        "--rg {params.test} "
+        "--ref-ld-chr {input.w_ld_chr}/ "
+        "--w-ld-chr {input.w_ld_chr}/ "
+        "--samp-prev {params.samp_prev} "
+        "--pop-prev {params.pop_prev} "
+        "--out {params.out_dir}"
+

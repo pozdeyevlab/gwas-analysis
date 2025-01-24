@@ -1,0 +1,32 @@
+map_file: "map_file.tsv"
+genomic_control: 'OFF'
+qc_input_dir: "qc/aligned"
+prep_dir: "Pipeline_Output/FINAL_METAL_INPUTS"
+output_dir: "meta_analysis/mixed_ancestry/"
+metal_binary: "metal/metal"
+hapmap: 'LDSC_REF/w_hm3.snplist'
+ref_ld_chr: 'LDSC_REF/mixed_w_ld_chr/'
+w_ld_chr: 'LDSC_REF/mixed_w_ld_chr/'
+sig_threshold: 5e-8
+phenotype_catalog_dict:
+  thyroid_cancer: "catalogs/thyroid_cancer.txt"
+  hypothyroidism: "catalogs/hypothyroidism.txt"
+  lymphocytic_thyroiditis: "catalogs/thyroiditis.txt"
+  benign_nodular_goiter: "catalogs/nodular_goiter.txt"
+  graves: "catalogs/graves_disease.txt"
+disease_prevalence_dict:
+  thyroid_cancer: 0.0085
+  hypothyroidism: 0.1258
+  lymphocytic_thyroiditis: 0.014
+  benign_nodular_goiter: 0.0465
+  tc_vs_bng: 0.0085
+  graves: 0.007
+gwas_catalog_disease_col: "DISEASE/TRAIT"
+mac_filter: 20
+biobank_min: 3
+annovar_perl: 'annovar/table_annovar.pl'
+humandb_dir: 'annovar/humandb'
+xref: 'annovar/example/gene_xref.txt'
+ldsc_env: '/projects/swhite3@xsede.org/LDSC/test/ldsc/environment.yml'
+cli_munge_script: 'ldsc/munge_sumstats.py'
+ldsc_script: 'ldsc/ldsc.py'
