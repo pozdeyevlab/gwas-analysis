@@ -1,4 +1,3 @@
-example_inputs/
 .snakemake/
 .DS_Store
 summix_out
