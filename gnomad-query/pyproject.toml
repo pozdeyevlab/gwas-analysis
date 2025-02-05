@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "gnomad_query"
+version = "0.1.0"
+description = ""
+authors = ["sam-white04 <white.samantha@outlook.com>"]
+readme = "README.md"
+packages = [{include = "gnomad_query"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+snakemake = "^7.32.4"
+isort = "^5.12.0"
+black = "^23.11.0"
+polars = "^0.20.6"
+defopt = "^6.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

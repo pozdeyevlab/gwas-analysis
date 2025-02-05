@@ -1,0 +1,4 @@
+gnomAD
+.snakemake/
+test/
+scratch.py

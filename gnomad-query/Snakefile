@@ -1,0 +1,102 @@
+from pathlib import Path
+from itertools import dropwhile
+from typing import Dict
+from typing import List
+from typing import NamedTuple
+from typing import Tuple
+import os
+
+################################################################################
+# Code to parse the sample sheet and find input files
+################################################################################
+
+# Grab paths and variables from the config file
+vcf: List[str] = config["vcf"]
+out_dir: str = config["out_dir"]
+
+class Sample(NamedTuple):
+    """Represents a vcf"""
+    chrom: str
+    vcf_path: str
+
+################################################################################
+# Construct dict of Samples
+################################################################################
+samples: Dict[str, Sample] = dict()
+for filename in vcf:
+    chrom = (filename.split(".vcf.bgz")[0]).split('.')[-1]
+    samples[chrom] = Sample(chrom, filename)
+################################################################################
+# Directives
+################################################################################
+onerror:
+    """Code that gets called  if / when the snakemake pipeline exits with an error.
+    The `log` variable contains a path to the snakemake log file which can be parsed
+    for more information. Summarizes information on failed jobs and writes it to the
+    output.
+    """
+    try:
+        path = Path(log)
+        RULE_PREFIX = "Error in rule "
+        LOG_PREFIX = "    log: "
+        CMD_PREFIX = "Command "
+
+        with path.open("r") as fh:
+            lines: Iterable[str] = fh.readlines()
+
+        while lines:
+            lines = list(dropwhile(lambda l: not l.startswith(RULE_PREFIX), lines))
+            if lines:
+                rule_name = lines[0].rstrip()[len(RULE_PREFIX) : -1]
+                lines = dropwhile(lambda l: not l.startswith(LOG_PREFIX), lines)
+                log_path = Path(next(lines).rstrip()[len(LOG_PREFIX) :].split()[0])
+
+                print(f"========== Start of Error Info for {rule_name} ==========")
+                print(f"Failed rule: {rule_name}")
+                print(f"Contents of log file: {log_path}")
+                with log_path.open("r") as fh:
+                    for line in fh.readlines():
+                        print(f"    {line.rstrip()}")
+                print(f"=========== End of Error Info for {rule_name} ===========")
+    except Exception as ex:
+        print("################################################")
+        print("Exception raised in snakemake onerror handler.")
+        print(str(ex))
+        print("################################################")
+
+
+#################################################################################
+## Beginning of rule declarations
+#################################################################################
+
+rule all:
+    """
+    Default rule that is executed when snakemake runs.  The 'inputs' here list the set of files
+    that the pipeline will generate by default if a specific list isn't provided.
+    """
+    input:
+        [f"{out_dir}/ref/gnomad_ref_{sample}.tsv" for sample in samples],
+        [f"{out_dir}/flagged/flagged_variants_{sample}.tsv" for sample in samples]
+
+
+rule bcftools_query:
+    params:
+        vcf = lambda wc: samples[wc.sample].vcf_path,
+        chrom = "{sample}",
+        temp_dir = "{out_dir}"
+    output:
+        out = "{out_dir}/ref/gnomad_ref_{sample}.tsv"
+    shell:
+        "bash bcftools_query.sh -v {params.vcf} -o {output.out} -c {params.chrom} -t {params.temp_dir}"
+
+
+rule an_flag:
+    input:
+        gnomad_ref = "{out_dir}/ref/gnomad_ref_{sample}.tsv"
+    output:
+        out = "{out_dir}/flagged/flagged_variants_{sample}.tsv"
+    shell:
+        "python flag.py "
+        "--gnomad-tsv {input.gnomad_ref} "
+        "--output-tsv {output.out}"
+
