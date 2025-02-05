@@ -22,7 +22,7 @@ qc_input_dir: Path = Path(config["qc_input_dir"])
 metal_binary: Path = Path(config["metal_binary"])
 hapmap: Path = Path(config["hapmap"])
 ref_ld_chr: Path = Path(config["ref_ld_chr"])
-w_ld_chr: Path = Path(config["w_ld_chr"])
+w_ld_chr: Path = Path(config["ref_ld_chr"])
 map_file: Path = Path(config["map_file"])
 annovar_perl: Path = Path(config["annovar_perl"])
 cli_munge_script: Path = Path(config["cli_munge_script"])
@@ -34,6 +34,7 @@ output_dir: Path = Path(config["output_dir"])
 humandb_dir: Path = Path(config["humandb_dir"])
 xref: Path = Path(config["xref"])
 prep_dir: Path = Path(config["prep_dir"])
+adj_dir: Path = Path(config["adj_dir"])
 
 # Filter Params
 biobank_min: int = config["biobank_min"]
@@ -58,6 +59,27 @@ class Input:
     control_count_col: Optional[str]
     total_count_col: Optional[str]
 
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Adj:
+    """Represents all necessary meta data for each biobank gwas"""
+
+    input_file: str
+    se: str
+    pval_col: str
+    gwas_software: str
+    chrom_col: str
+    pos_col: str
+    case_count: int
+    control_count: int
+    case_count_col: Optional[str]
+    control_count_col: Optional[str]
+    total_count_col: Optional[str]
+    gc_value: float
+    metal_output: str
+    metal_script: str
+    metal_input: str
+    post_metal_meta_input: str
 
 @attr.s(frozen=True, auto_attribs=True, kw_only=True)
 class Matrix:
@@ -98,7 +120,8 @@ inputs: Dict[str, List[Input]] = {}
 metal: Dict[str, List[str]] = {}
 munge: Dict[str, List[Munge]] = {}
 matrix: Dict[str, List[Matrix]] = {}
-
+adj: Dict[str, List[Adj]] = {}
+pre_adj: Dict[str, List[str]] = {}
 # Read map_df into pandas df
 map_df: pd.DataFrame = pd.read_csv(map_file, sep="\t")
 
@@ -116,25 +139,50 @@ for index, row in map_df.iterrows():
 
     try:
         # Dict of INPUT (used in metal_prep)
-        inputs[unique_id] = Input(
-            input_files=input_files[0],
-            se=row["SE"],
-            pval_col=row["PVAL"],
-            gwas_software=row["GWAS_SOFTWARE"],
-            chrom_col=row["CHROM"],
-            pos_col=row["POS"],
-            case_count=row["Case_Count"],
-            control_count=row["Control_Count"],
-            case_count_col=row["Case_N"],
-            control_count_col=row["Control_N"],
-            total_count_col=row["Total_N"],
+        if (row['lower_ci_95_intercept'] <= 1.0) or (str(row['lower_ci_95_intercept']) == 'nan'):
+            inputs[unique_id] = Input(
+                input_files=input_files[0],
+                se=row["SE"],
+                pval_col=row["PVAL"],
+                gwas_software=row["GWAS_SOFTWARE"],
+                chrom_col=row["CHROM"],
+                pos_col=row["POS"],
+                case_count=row["Case_Count"],
+                control_count=row["Control_Count"],
+                case_count_col=row["Case_N"],
+                control_count_col=row["Control_N"],
+                total_count_col=row["Total_N"],
         )
-
+        if row['lower_ci_95_intercept'] > 1.0:
+            adj[unique_id] = Adj(
+                input_file=input_files[0],
+                se=row["SE"],
+                pval_col=row["PVAL"],
+                gwas_software=row["GWAS_SOFTWARE"],
+                chrom_col=row["CHROM"],
+                pos_col=row["POS"],
+                case_count=row["Case_Count"],
+                control_count=row["Control_Count"],
+                case_count_col=row["Case_N"],
+                control_count_col=row["Control_N"],
+                total_count_col=row["Total_N"],
+                gc_value=row["intercept"],
+                metal_input=f"{adj_dir}/metal_results/{unique_id}.tsv",
+                metal_output=f"{adj_dir}/metal_results/{unique_id}_1.tbl",
+                metal_script=f"{adj_dir}/metal_results/{unique_id}.metal",
+                post_metal_meta_input=f"{adj_dir}/metal_prep_adj/{unique_id}.tsv"
+            )
         # Make a list of input files for metal per phenotype
-        if row["PHENOTYPE"] not in metal:
-            metal[row["PHENOTYPE"]] = [f"{prep_dir}/metal_prep/{unique_id}.tsv"]
-        else:
-            metal[row["PHENOTYPE"]].append(f"{prep_dir}/metal_prep/{unique_id}.tsv")
+        if (row['lower_ci_95_intercept'] <= 1.0) or (str(row['lower_ci_95_intercept']) =='nan'):
+            if row["PHENOTYPE"] not in metal:
+                metal[row["PHENOTYPE"]] = [f"{prep_dir}/metal_prep/{unique_id}.tsv"]
+            else:
+                metal[row["PHENOTYPE"]].append(f"{prep_dir}/metal_prep/{unique_id}.tsv")
+        if row['lower_ci_95_intercept'] > 1.0:
+            if row["PHENOTYPE"] not in metal:
+                metal[row["PHENOTYPE"]] = [f"{adj_dir}/metal_prep_adj/{unique_id}.tsv"]
+            else:
+                metal[row["PHENOTYPE"]].append(f"{adj_dir}/metal_prep_adj/{unique_id}.tsv")       
     except IndexError:
         # Throw error if an expected file is not found in the provided input directory
         print(pattern)
@@ -165,8 +213,7 @@ for phenotype in list(set(map_df['PHENOTYPE'])):
         disease_prev=disease_prevalence_dict[CATALOG_PHENOTYPE],
     )
 
-ldsc_input_files = [munge[key].post_munge_cli for key, value in munge.items()]
-
+ldsc_input_files = [munge[key].post_munge_cli for key, value in munge.items()] #if 'hypothyroidism' not in munge[key].post_munge_cli]
 # Set up LDSC Matrix Inputs
 for i in range(len(ldsc_input_files)):
     start = ldsc_input_files[i]
@@ -188,6 +235,9 @@ for i in range(len(ldsc_input_files)):
         sample_prev=",".join(str(i) for i in samp_prev),
         population_prev=",".join(str(i) for i in disease_prev),
     )
+
+for key, value in inputs.items():
+	print(key)
 ################################################################################
 # Directives
 ################################################################################
@@ -236,6 +286,11 @@ rule all:
     that the pipeline will generate by default if a specific list isn't provided.
     """
     input:
+        [f'{adj_dir}/metal_results/{key}.tsv' for key, value in adj.items()],
+        [f'{adj_dir}/metal_results/{key}.metal' for key, value in adj.items()],
+        [f'{adj_dir}/metal_results/{key}_1.tbl' for key, value in adj.items()],
+        [f'{adj_dir}/metal_prep_adj/{key}.tsv' for key in adj],
+
         [f'{prep_dir}/metal_prep/{key}.tsv' for key, value in inputs.items()],
         [f'{output_dir}/metal_results/{key}.metal' for key in metal],
         [f'{output_dir}/metal_plots/{key}.png' for key in metal],
@@ -249,11 +304,105 @@ rule all:
         [f'{output_dir}/ldsc_pre_munge/{key}_with_rsid.tsv' for key, value in munge.items()],
         [f'{output_dir}/cli_munge/{key}.sumstats.gz' for key, value in munge.items()],
         [f'{output_dir}/cli_ldsc/{key}.log' for key, value in munge.items()],
-        #[f'{output_dir}/cli_ldsc_matrix/{key}.log' for key, value in matrix.items()],
+        [f'{output_dir}/cli_ldsc_matrix/{key}.log' for key, value in matrix.items()],
 
 
+rule prep_files_adj:
+    params:
+        qc_files = lambda wc: adj[wc.adj].input_file,
+        se = lambda wc: adj[wc.adj].se,
+        chrom = lambda wc: adj[wc.adj].chrom_col,
+        pos = lambda wc: adj[wc.adj].pos_col,
+        case_count = lambda wc: adj[wc.adj].case_count,
+        control_count = lambda wc: adj[wc.adj].control_count,
+        pval_col = lambda wc: adj[wc.adj].pval_col,
+        ref = 'REF_gnomad',
+        alt = 'ALT_gnomad',
+        mac_filter = mac_filter,
+        case_count_col=lambda wc: adj[wc.adj].case_count_col,
+        control_count_col=lambda wc: adj[wc.adj].control_count_col,
+        total_count_col=lambda wc: adj[wc.adj].total_count_col
+    output:
+        out_prep = "{adj_dir}/metal_results/{adj}.tsv"
+    log:
+        "{adj_dir}/metal_results/{adj}_prep.log"
+    #conda:
+    #    "environment.yml"
+    shell:
+        "python modules/prep_for_metal.py "
+        "--input-file {params.qc_files} "
+        "--se {params.se} "
+        "--ea {params.alt} "
+        "--non-ea {params.ref} "
+        "--chrom-col \{params.chrom} "
+        "--pos-col {params.pos} "
+        "--case-count {params.case_count} "
+        "--case-count-col {params.case_count_col} "
+        "--control-count {params.control_count} "
+        "--control-count-col {params.control_count_col} "
+        "--total-count-col {params.total_count_col} "
+        "--pval-col {params.pval_col} "
+        "--mac-filter {params.mac_filter} "
+        "--output-path {output.out_prep} &> {log}"
 
-rule prep_files:
+rule prep_files_adj_post_metal:
+    input:
+        metal_output=lambda wc: adj[wc.adj].metal_output,
+        metal_input=lambda wc: adj[wc.adj].metal_input
+    output:
+        out_prep = "{adj_dir}/metal_prep_adj/{adj}.tsv"
+    log:
+        "{adj_dir}/metal_prep_adj/{adj}_prep.log"
+    #conda:
+    #    "environment.yml"
+    shell:
+        "python modules/prep_for_metal_post_adj.py "
+        "--input-file {input.metal_input} "
+        "--metal-output {input.metal_output} "
+        "--output-path {output.out_prep} &> {log}"
+
+for m in metal:
+    rule:
+        name: f'write_metal_script_{m}'
+        input:
+            input_files = metal[m],
+        output:
+            metal_script_out=f'{output_dir}/metal_results/{m}.metal'
+        params:
+            metal_output=f'{output_dir}/metal_results/{m}_ .tbl',
+            gc = gc
+        log:
+            f"{output_dir}/metal_results/{m}_script.log"
+        #conda:
+        #    "environment.yml"
+        shell:
+            "python modules/make_metal_script.py "
+            "--input-files {input.input_files} "
+            "--gc {params.gc} "
+            "--metal-out '{params.metal_output}' "
+            "--output-path {output.metal_script_out}"
+
+
+rule write_metal_adj:
+    input:
+        input_file = lambda wc: adj[wc.adj].metal_input,
+    output:
+        '{adj_dir}/metal_results/{adj}.metal'
+    params:
+        metal_output='{adj_dir}/metal_results/{adj}_ .tbl',
+        gc = lambda wc: adj[wc.adj].gc_value
+    log:
+        "{adj_dir}/metal_results/{adj}_script.log"
+    #conda:
+    #    "environment.yml"
+    shell:
+        "python modules/make_metal_script.py "
+        "--input-files {input.input_file} "
+        "--gc {params.gc} "
+        "--metal-out '{params.metal_output}' "
+        "--output-path {output}"
+
+rule prep_files_no_adj:
     params:
         qc_files = lambda wc: inputs[wc.input].input_files,
         se = lambda wc: inputs[wc.input].se,
@@ -291,29 +440,6 @@ rule prep_files:
         "--mac-filter {params.mac_filter} "
         "--output-path {output.out_prep} &> {log}"
 
-
-for m in metal:
-    rule:
-        name: f'write_metal_script_{m}'
-        input:
-            input_files = metal[m],
-        output:
-            metal_script_out=f'{output_dir}/metal_results/{m}.metal'
-        params:
-            metal_output=f'{output_dir}/metal_results/{m}_ .tbl',
-            gc = gc
-        log:
-            f"{output_dir}/metal_results/{m}_script.log"
-        #conda:
-        #    "environment.yml"
-        shell:
-            "python modules/make_metal_script.py "
-            "--input-files {input.input_files} "
-            "--gc {params.gc} "
-            "--metal-out '{params.metal_output}' "
-            "--output-path {output.metal_script_out}"
-
-
 for m in metal:
     rule:
         name: f'run_metal_{m}'
@@ -328,6 +454,20 @@ for m in metal:
         #    "environment.yml"
         shell:
             "./{input.metal_binary} {input.metal_script} &> {log}"
+
+
+rule pre_meta_metal:
+    input:
+        metal_script = lambda wc: adj[wc.adj].metal_script,
+        metal_binary = metal_binary,
+    output:
+        metal_out = '{adj_dir}/metal_results/{adj}_1.tbl'
+    log:
+        '{adj_dir}/metal_results/{adj}_metal.log'
+    #conda:
+    #    "environment.yml"
+    shell:
+        "./{input.metal_binary} {input.metal_script} &> {log}"
 
 
 for m in metal:
@@ -614,7 +754,9 @@ rule ldsc_matrix:
         "--rg {params.test} "
         "--ref-ld-chr {input.w_ld_chr}/ "
         "--w-ld-chr {input.w_ld_chr}/ "
-        "--samp-prev {params.samp_prev} "
-        "--pop-prev {params.pop_prev} "
+        "--samp-prev {params.pop_prev} "
+        "--pop-prev {params.samp_prev} "
         "--out {params.out_dir}"
+
+
 
