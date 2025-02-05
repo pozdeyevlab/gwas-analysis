@@ -48,7 +48,7 @@ merged <- merged[!is.na(merged$Aligned_AF), ]
 
 # downsampling to random 10000 SNPs
 for (i in 1:5) {
-  merged_ds <- merged[sample.int(nrow(merged), 10000)]
+  merged_ds <- merged[sample.int(nrow(merged), 10000, replace=TRUE)]
 
   # inverting freq when needed
   merged_ds$true_freq <- merged_ds$Aligned_AF
