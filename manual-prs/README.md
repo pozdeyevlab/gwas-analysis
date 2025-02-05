@@ -9,9 +9,11 @@
 3) Significant variants output from `run-metal/module/significant_loci.py`
 4) Map file (example provided `map_file`)
 5) Bcftools is required (and not invcluded in the conda install)
+6) Download plink2 (https://www.cog-genomics.org/plink/)
 
 # Run Workflow
 ```bash
+# Conda set up
 conda env create -f environment.yml
 conda activate manual_prs
 poetry install
