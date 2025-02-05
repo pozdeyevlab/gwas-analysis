@@ -1,0 +1,198 @@
+import csv
+from itertools import dropwhile
+from pathlib import Path
+from typing import (Dict, Iterable, List, NamedTuple, Optional, Set, Tuple,
+                    Union)
+import pandas as pd
+import attr
+import polars as pl
+import sys
+
+################################################################################
+# Set Up
+################################################################################
+# Grab the location of various things from the config
+pgen_dir: str  =config["pgen_dir"]
+out_dir: Path  =Path(config["out_dir"])
+plink: Path    =Path(config['plink'])
+map_file: Path =Path(config['map_file'])
+
+
+# Read in the map file provided from the config
+map_df: pd.DataFrame=pd.read_csv(map_file, sep='\t')
+
+# Make output dictionary and class
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class PRS:
+    """Represents necessary input data for linkage disequilibrium score regression"""
+    phenotype: str
+    hardcall_phenotype_file: Path
+    phen_col: str
+    sig_loci: Path
+    results: str
+    disease: str
+    callset: str
+    gt_file: str
+    sample_file: str
+    weights: str
+
+# Make output dictionary and class
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class PREP:
+    """Represents necessary input data for linkage disequilibrium score regression"""
+    disease: str
+    sig_loci: Path
+
+prs = {}
+prep = {}
+
+# Read in the map file provided from the config
+map_df: pd.DataFrame=pd.read_csv(map_file, sep='\t')
+
+for index, row in map_df.iterrows():
+    disease=row['phenotype']
+    callset=row['test']
+    phenotype=f'{disease}_{callset}'
+    phenotype_hardcalls=row['phenotype_hardcalls']
+    phen_col_name=row['phen_col_name']
+    sig_loci=row['significant_loci'].strip()
+    prs[phenotype]=PRS(phenotype=phenotype,
+        disease=disease,
+        callset=callset,
+        hardcall_phenotype_file=phenotype_hardcalls,
+        phen_col=phen_col_name, 
+        sig_loci=sig_loci, 
+        results=f'{out_dir}/{phenotype}/{phenotype}_auc_results.tsv',
+        gt_file=f'{out_dir}/{disease}/gt_data.tsv',
+        sample_file=f'{out_dir}/{disease}/sample_ids.tsv',
+        weights=f"{out_dir}/{disease}/{disease}_correceted_beta_sig_loci.tsv")
+    if disease not in prep:
+        prep[disease]=PREP(disease=disease,
+            sig_loci=sig_loci)
+
+################################################################################
+# Directives
+################################################################################
+onerror:
+    """Code that gets called  if / when the snakemake pipeline exits with an error.
+    The `log` variable contains a path to the snakemake log file which can be parsed
+    for more information. Summarizes information on failed jobs and writes it to the
+    output.
+    """
+    try:
+        path=Path(log)
+        RULE_PREFIX="Error in rule "
+        LOG_PREFIX="    log: "
+        CMD_PREFIX="Command "
+
+        with path.open("r") as fh:
+            lines: Iterable[str]=fh.readlines()
+
+        while lines:
+            lines=list(dropwhile(lambda l: not l.startswith(RULE_PREFIX), lines))
+            if lines:
+                rule_name=lines[0].rstrip()[len(RULE_PREFIX) : -1]
+                lines=dropwhile(lambda l: not l.startswith(LOG_PREFIX), lines)
+                log_path=Path(next(lines).rstrip()[len(LOG_PREFIX) :].split()[0])
+
+                print(f"========== Start of Error Info for {rule_name} ==========")
+                print(f"Failed rule: {rule_name}")
+                print(f"Contents of log file: {log_path}")
+                with log_path.open("r") as fh:
+                    for line in fh.readlines():
+                        print(f"    {line.rstrip()}")
+                print(f"=========== End of Error Info for {rule_name} ===========")
+    except Exception as ex:
+        print("################################################")
+        print("Exception raised in snakemake onerror handler.")
+        print(str(ex))
+        print("################################################")
+
+
+################################################################################
+# Beginning of rule declarations
+################################################################################
+rule all:
+    """
+    Default rule that is executed when snakemake runs.  The 'inputs' here list the set of files
+    that the pipeline will generate by default if a specific list isn't provided.
+    """
+    input:
+        [f'{out_dir}/{disease}/gt_data.tsv' for disease in prep],
+        [f'{out_dir}/{disease}/sample_ids.tsv' for disease in prep],
+        [f'{out_dir}/{phenotype}/{phenotype}_auc_results.tsv' for phenotype in prs],
+        f'{out_dir}/combined_auc_results.tsv'
+
+
+rule correct_betas:
+    input:
+        sig_loci=lambda wc: prep[wc.disease].sig_loci,
+    output:
+        out_file="{out_dir}/{disease}/{disease}_correceted_beta_sig_loci.tsv"
+    log:
+        "{out_dir}/{disease}/logs/{disease}_make_varlist_and_correct_betas.log"
+    shell:
+        "python modules/prep_varlist.py "
+        "-s {input.sig_loci} "
+        "-o {output.out_file} &> {log}"
+
+
+rule get_genotypes:
+    input:
+        plink=plink,
+        var_list="{out_dir}/{disease}/{disease}_correceted_beta_sig_loci.tsv"
+    params:
+        pgen_dir=pgen_dir,
+        phenotype="{disease}",
+        out_dir=out_dir
+    output:
+        out_file="{out_dir}/{disease}/gt_data.tsv",
+        samples="{out_dir}/{disease}/sample_ids.tsv"
+    log:
+        "{out_dir}/{disease}/logs/{disease}_make_vcf.log"
+    shell:
+        "bash make_vcf.sh "
+        "-i {params.pgen_dir} "
+        "-w {input.var_list} "
+        "-d {params.phenotype} "
+        "-p {input.plink} "
+        "-o {params.out_dir} &> {log}"
+
+rule calculate_auc:
+    input:
+        gt_table=lambda wc: prs[wc.phenotype].gt_file,
+        header_file=lambda wc: prs[wc.phenotype].sample_file,
+        weights=lambda wc: prs[wc.phenotype].weights,
+        phen_file=lambda wc: prs[wc.phenotype].hardcall_phenotype_file
+    params:
+        phenotype="{phenotype}",
+        phen_col=lambda wc: prs[wc.phenotype].phen_col
+    output:
+        out_tsv="{out_dir}/{phenotype}/{phenotype}_auc_results.tsv",
+        out_png="{out_dir}/plots/{phenotype}_auc_results.png"
+    log:
+        "{out_dir}/{phenotype}/logs/{phenotype}_find_auc.log"
+    shell:
+        "python modules/auc.py "
+        "--phen-col {params.phen_col} "
+        "--gt-file {input.gt_table} "
+        "--header-file {input.header_file} "
+        "--beta-file {input.weights} "
+        "--phenotype-file {input.phen_file} "
+        "--plot-output {output.out_png} "
+        "--summary-output {output.out_tsv} "
+        "--phenotype {params.phenotype} &> {log}"
+
+
+rule combine_results:
+    input:
+        files=[prs[phenotype].results for phenotype in prs]
+    output:
+        out_file='{out_dir}/combined_auc_results.tsv'
+    shell:
+        """
+        echo -e 'phenotype\tauc' > {output.out_file}
+        for file in {input.files}; do
+            tail -n +2 $file >> {output.out_file}
+        done
+        """

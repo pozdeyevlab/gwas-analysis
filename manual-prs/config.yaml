@@ -1,0 +1,4 @@
+out_dir: "manual_prs_output"
+map_file: "map.txt"
+pgen_dir: "/pl/active/pozdeyevlab/R179_R180_pozdeyev/ccpm_freeze4/ccpm_freeze4_autosomes_final_R179_R180_ArbId_chr"
+plink: "../plink2"
