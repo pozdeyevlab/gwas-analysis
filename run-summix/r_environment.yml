@@ -1,0 +1,12 @@
+name: summix_r
+channels:
+  - conda-forge
+  - r
+  - bioconda
+dependencies:
+  - r-base=4.2
+  - r-devtools
+  - r-essentials
+  - conda-forge::r-optparse
+  - bioconductor-Summix  
+

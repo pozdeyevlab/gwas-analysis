@@ -83,7 +83,7 @@ for index, row in map_df.iterrows():
             case_count_col=row["Case_N"],
             control_count_col=row["Control_N"],
             total_count_col=row["Total_N"],
-            prep_file = f'{prep_dir}/metal_prep/{unique_id}.tsv'
+            prep_file = f'{prep_dir}/summix_prep/{unique_id}.tsv'
         )
     except IndexError:
         # Throw error if an expected file is not found in the provided input directory
@@ -140,7 +140,7 @@ rule all:
     that the pipeline will generate by default if a specific list isn't provided.
     """
     input:
-        [f'{prep_dir}/metal_prep/{key}.tsv' for key, value in inputs.items()],
+        [f'{prep_dir}/summix_prep/{key}.tsv' for key, value in inputs.items()],
         [f'{output_dir}/summix_results/{key}.tsv' for key, value in inputs.items()],
 
 rule prep_files:
@@ -159,13 +159,13 @@ rule prep_files:
         control_count_col=lambda wc: inputs[wc.input].control_count_col,
         total_count_col=lambda wc: inputs[wc.input].total_count_col
     output:
-        out_prep = "{prep_dir}/metal_prep/{input}.tsv"
+        out_prep = "{prep_dir}/summix_prep/{input}.tsv"
     log:
-        "{prep_dir}/metal_prep/{input}_prep.log"
+        "{prep_dir}/summix_prep/{input}_prep.log"
     #conda:
     #    "environment.yml"
     shell:
-        "python /projects/swhite3@xsede.org/TEST/run-metal/modules/prep_for_metal.py "
+        "python modules/prep_for_summix.py "
         "--input-file {params.qc_files} "
         "--se {params.se} "
         "--ea {params.alt} "

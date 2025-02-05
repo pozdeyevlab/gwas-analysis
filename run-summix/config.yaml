@@ -1,0 +1,7 @@
+map_file: "example_inputs/meta_data.tsv"
+qc_input_dir: "example_inputs/input_data/"
+prep_dir: "example_inputs/prep_for_summix"
+output_dir: "summix_out"
+gnomad_ref: 'example_inputs/gnomad_refs/chr21_subset_reference.tsv'
+summix_env: 'r_environment.yml'
+mac_filter: 20

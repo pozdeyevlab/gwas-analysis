@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "run-metal"
+version = "0.1.0"
+description = ""
+authors = ["sam-white04 <white.samantha@outlook.com>"]
+readme = "README.md"
+packages = [{include = "run_metal"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+snakemake = "^8.5.3"
+black = "^24.2.0"
+isort = "^5.13.2"
+pylint = "^3.1.0"
+polars = "^0.20.10"
+pandas = "^2.2.1"
+defopt = "^6.4.0"
+matplotlib = "^3.8.3"
+qqman = "^1.0.7"
+numpy = "^1.26.4"
+pyarrow = "^15.0.1"
+scipy = "^1.12.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
