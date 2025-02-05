@@ -1,0 +1,199 @@
+"""
+This meta analysis pipeline is set up as such:
+"""
+
+import datetime
+import fnmatch
+import re
+import os
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Union
+
+import attr
+import pandas as pd
+
+################################################################################
+# Set Up & Data Structure
+################################################################################
+# Grab the location of various things from the config
+# Input Files/Directories
+qc_input_dir: Path = Path(config["qc_input_dir"])
+summix_env: Path = Path(config['summix_env'])
+map_file: Path = Path(config["map_file"])
+output_dir: Path = Path(config["output_dir"])
+prep_dir: Path = Path(config["prep_dir"])
+gnomad_ref: Path = Path(config["gnomad_ref"])
+mac_filter: int = config['mac_filter']
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Input:
+    """Represents all necessary meta data for each biobank gwas"""
+
+    input_files: str
+    se: str
+    pval_col: str
+    gwas_software: str
+    chrom_col: str
+    pos_col: str
+    case_count: int
+    control_count: int
+    case_count_col: Optional[str]
+    control_count_col: Optional[str]
+    total_count_col: Optional[str]
+    prep_file: str
+
+def _find_tsv_files(directory):
+    # Grab all files that end in *aligned_results.tsv
+    tsv_files = []
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if fnmatch.fnmatch(file, "*aligned_results.tsv"):
+                tsv_files.append(os.path.join(root, file))
+    return tsv_files
+
+inputs: Dict[str, List[Input]] = {}
+
+# Read map_df into pandas df
+map_df: pd.DataFrame = pd.read_csv(map_file, sep="\t")
+
+# Get list of files ending in "aligned_results.tsv' from input directory
+file_list: List[str] = _find_tsv_files(qc_input_dir)
+
+for index, row in map_df.iterrows():
+    unique_id = f"{row['BIOBANK']}_{row['PHENOTYPE']}_{row['SEX']}_{row['ANCESTRY']}"
+    pattern = rf".*{re.escape(unique_id)}.*"
+    input_files = []
+    for input_file in file_list:
+        match = re.findall(pattern, input_file)
+        if match:
+            input_files.append(match[0])
+
+    try:
+        # Dict of INPUT (used in metal_prep)
+        inputs[unique_id] = Input(
+            input_files=input_files[0],
+            se=row["SE"],
+            pval_col=row["PVAL"],
+            gwas_software=row["GWAS_SOFTWARE"],
+            chrom_col=row["CHROM"],
+            pos_col=row["POS"],
+            case_count=row["Case_Count"],
+            control_count=row["Control_Count"],
+            case_count_col=row["Case_N"],
+            control_count_col=row["Control_N"],
+            total_count_col=row["Total_N"],
+            prep_file = f'{prep_dir}/metal_prep/{unique_id}.tsv'
+        )
+    except IndexError:
+        # Throw error if an expected file is not found in the provided input directory
+        print(pattern)
+        print(file_list)
+        sys.exit(1)
+
+print(inputs)
+################################################################################
+# Directives
+################################################################################
+onerror:
+    """Code that gets called  if / when the snakemake pipeline exits with an error.
+    The `log` variable contains a path to the snakemake log file which can be parsed
+    for more information. Summarizes information on failed jobs and writes it to the
+    output.
+    """
+    try:
+        path = Path(log)
+        RULE_PREFIX = "Error in rule "
+        LOG_PREFIX = "    log: "
+        CMD_PREFIX = "Command "
+
+        with path.open("r") as fh:
+            lines: Iterable[str] = fh.readlines()
+
+        while lines:
+            lines = list(dropwhile(lambda l: not l.startswith(RULE_PREFIX), lines))
+            if lines:
+                rule_name = lines[0].rstrip()[len(RULE_PREFIX) : -1]
+                lines = dropwhile(lambda l: not l.startswith(LOG_PREFIX), lines)
+                log_path = Path(next(lines).rstrip()[len(LOG_PREFIX) :].split()[0])
+
+                print(f"========== Start of Error Info for {rule_name} ==========")
+                print(f"Failed rule: {rule_name}")
+                print(f"Contents of log file: {log_path}")
+                with log_path.open("r") as fh:
+                    for line in fh.readlines():
+                        print(f"    {line.rstrip()}")
+                print(f"=========== End of Error Info for {rule_name} ===========")
+    except Exception as ex:
+        print("################################################")
+        print("Exception raised in snakemake onerror handler.")
+        print(str(ex))
+        print("################################################")
+
+
+################################################################################
+# Beginning of rule declarations
+################################################################################
+rule all:
+    """
+    Default rule that is executed when snakemake runs.  The 'inputs' here list the set of files
+    that the pipeline will generate by default if a specific list isn't provided.
+    """
+    input:
+        [f'{prep_dir}/metal_prep/{key}.tsv' for key, value in inputs.items()],
+        [f'{output_dir}/summix_results/{key}.tsv' for key, value in inputs.items()],
+
+rule prep_files:
+    params:
+        qc_files = lambda wc: inputs[wc.input].input_files,
+        se = lambda wc: inputs[wc.input].se,
+        chrom = lambda wc: inputs[wc.input].chrom_col,
+        pos = lambda wc: inputs[wc.input].pos_col,
+        case_count = lambda wc: inputs[wc.input].case_count,
+        control_count = lambda wc: inputs[wc.input].control_count,
+        pval_col = lambda wc: inputs[wc.input].pval_col,
+        ref = 'REF_gnomad',
+        alt = 'ALT_gnomad',
+        mac_filter = mac_filter,
+        case_count_col=lambda wc: inputs[wc.input].case_count_col,
+        control_count_col=lambda wc: inputs[wc.input].control_count_col,
+        total_count_col=lambda wc: inputs[wc.input].total_count_col
+    output:
+        out_prep = "{prep_dir}/metal_prep/{input}.tsv"
+    log:
+        "{prep_dir}/metal_prep/{input}_prep.log"
+    #conda:
+    #    "environment.yml"
+    shell:
+        "python /projects/swhite3@xsede.org/TEST/run-metal/modules/prep_for_metal.py "
+        "--input-file {params.qc_files} "
+        "--se {params.se} "
+        "--ea {params.alt} "
+        "--non-ea {params.ref} "
+        "--chrom-col \{params.chrom} "
+        "--pos-col {params.pos} "
+        "--case-count {params.case_count} "
+        "--case-count-col {params.case_count_col} "
+        "--control-count {params.control_count} "
+        "--control-count-col {params.control_count_col} "
+        "--total-count-col {params.total_count_col} "
+        "--pval-col {params.pval_col} "
+        "--mac-filter {params.mac_filter} "
+        "--output-path {output.out_prep} &> {log}"
+
+
+rule summix:
+    input:
+        gnomad_ref = gnomad_ref,
+        input_file = lambda wc: inputs[wc.input].prep_file
+    output:
+        "{output_dir}/summix_results/{input}.tsv"
+    log:
+        "{output_dir}/summix_results/{input}.log"
+    conda:
+        summix_env
+    shell:
+        "Rscript run_summix.R "
+        "--input {input.input_file} "
+        "--reference {input.gnomad_ref} "
+        "--output {output} &> {log}"
