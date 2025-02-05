@@ -12,10 +12,15 @@ The commands below will build the required environment, activate it, and create 
 
 This repository comes with test data, use this an example for your own input data. 
 
+## Snakemake workflow for all aligned results
 ```bash
 conda env create -f environment.yml
 conda activate summix_snkmk
 snakemake --cores 1 --configfile config.yaml --snakefile Snakefile --use-conda --conda-frontend conda --dry-run
 
-# The output TSV can be found in summix_out/summix_results/
+## Simple bash script for running summix on metal results
+```bash
+conda env create -f r_environment.yml
+conda activate summix
+bash run_summix_on_metal.sh
 ```
