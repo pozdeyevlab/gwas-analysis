@@ -1,0 +1,5 @@
+map_file: "BioVU.txt"
+gnomad_ref_dir: "gnomAD"
+gnomad_flag_dir: "gnomAD"
+output_tsv: "output/CCPM/results"
+output_plots: "output/CCPM/plots"
