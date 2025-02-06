@@ -1,0 +1,7 @@
+name: run_ldsc
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - poetry=1.5.1
+  - python=3.11

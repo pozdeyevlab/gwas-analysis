@@ -1,0 +1,16 @@
+map_file: "eur.tsv"
+rsid_map: 'full_rsid_map.tsv'
+ldsc_script: 'ldsc/ldsc.py'
+output_dir: "LDSC_OUT"
+hapmap: 'LDSC_REF/w_hm3.snplist'
+w_ld_chr: 'LDSC_REF/eur_w_ld_chr'
+munge_script: 'ldsc/munge_sumstats.py'
+ldsc_env: 'ldsc/environment.yml'
+disease_prevalence_dict: 
+  thyroid_cancer: 0.0085
+  hypothyroidism: 0.1258
+  benign_nodular_goiter: 0.0465
+  lymphocytic_thyroiditis: 0.014
+  graves: 0.007
+  tc_vs_bng: 0.0085
+gnomad_flag_dir: "GNOMAD_REF/flagged_variants"

@@ -1,0 +1,227 @@
+#!/usr/bin/env python
+
+from datetime import datetime
+from itertools import dropwhile
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Union
+
+import attr
+import pandas as pd
+import polars as pl
+
+################################################################################
+# Set Up
+################################################################################
+# Grab the location of various things from the config
+map_file: Path                      = Path(config["map_file"])
+ldsc_script: Path                   = Path(config["ldsc_script"])
+munge_script: Path                  = Path(config["munge_script"])
+ldsc_env: Path                      = Path(config["ldsc_env"])
+output_dir: Path                    = Path(config["output_dir"])
+disease_prevalence_dict: dict       = config['disease_prevalence_dict']
+rsid_map: Path                      = Path(config['rsid_map'])
+hapmap: Path                        = Path(config['hapmap'])
+w_ld_chr: Path                      = Path(config['w_ld_chr'])
+
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Phenotype:
+    """Represents all necessary meta data for each biobank gwas"""
+    biobank_id: str
+    gwas_software: str
+    stats_path: str
+    sex: str
+    ancestry: str
+    disease: str
+    biobank: str
+    chrom_col: str
+    pos_col: str
+    effect_allele_col: str
+    non_effect_allele_col: str
+    effect_af: str
+    beta_col: str
+    se_col: str
+    pval_col: str
+    id_col: str
+    sample_prev: float
+    total_n: Optional[str]
+    case_n: Optional[str]
+    control_n: Optional[str]
+    pop_prev: float
+    calculated_total: float
+
+# Data structures that will be sued in all rule
+phenotypes: Dict[str, Phenotype] = dict()
+
+# Read in the map file provided from the config
+map_df: pd.DataFrame = pd.read_csv(map_file, sep='\t')
+
+for index, row in map_df.iterrows():
+    unique_id = f"{row['BIOBANK']}_{row['PHENOTYPE']}_{row['SEX']}_{row['ANCESTRY']}"
+    phenotypes[unique_id] = Phenotype(biobank_id = unique_id, 
+                                    gwas_software = row['GWAS_SOFTWARE'],
+                                    stats_path = row['PATH'].strip(),
+                                    sex = row['SEX'],
+                                    ancestry = row['ANCESTRY'],
+                                    disease = row['PHENOTYPE'],
+                                    biobank = row['BIOBANK'],
+                                    chrom_col = row['CHROM'],
+                                    pos_col = row['POS'],
+                                    effect_allele_col = row['Effect_Allele'],
+                                    non_effect_allele_col = row['Non_Effect_Allele'],
+                                    effect_af = row['Effect_AF'],
+                                    beta_col = row['BETA'],
+                                    se_col = row['SE'],
+                                    pval_col = row['PVAL'],
+                                    id_col = row['ID'],
+                                    sample_prev = row['Case_Count']/row['Control_Count'],
+                                    total_n = row['Total_N'],
+                                    control_n = row['Control_N'],
+                                    calculated_total = row['Control_Count'] + row['Case_Count'],
+                                    case_n = row['Case_N'],
+                                    pop_prev = disease_prevalence_dict[row['PHENOTYPE']])
+################################################################################
+# Directives
+################################################################################
+onerror:
+    """Code that gets called  if / when the snakemake pipeline exits with an error.
+    The `log` variable contains a path to the snakemake log file which can be parsed
+    for more information. Summarizes information on failed jobs and writes it to the
+    output.
+    """
+    try:
+        path = Path(log)
+        RULE_PREFIX = "Error in rule "
+        LOG_PREFIX = "    log: "
+        CMD_PREFIX = "Command "
+
+        with path.open("r") as fh:
+            lines: Iterable[str] = fh.readlines()
+
+        while lines:
+            lines = list(dropwhile(lambda l: not l.startswith(RULE_PREFIX), lines))
+            if lines:
+                rule_name = lines[0].rstrip()[len(RULE_PREFIX) : -1]
+                lines = dropwhile(lambda l: not l.startswith(LOG_PREFIX), lines)
+                log_path = Path(next(lines).rstrip()[len(LOG_PREFIX) :].split()[0])
+
+                print(f"========== Start of Error Info for {rule_name} ==========")
+                print(f"Failed rule: {rule_name}")
+                print(f"Contents of log file: {log_path}")
+                with log_path.open("r") as fh:
+                    for line in fh.readlines():
+                        print(f"    {line.rstrip()}")
+                print(f"=========== End of Error Info for {rule_name} ===========")
+    except Exception as ex:
+        print("################################################")
+        print("Exception raised in snakemake onerror handler.")
+        print(str(ex))
+        print("################################################")
+
+
+################################################################################
+# Beginning of rule declarations
+################################################################################
+rule all:
+    """
+    Default rule that is executed when snakemake runs.  The 'inputs' here list the set of files
+    that the pipeline will generate by default if a specific list isn't provided.
+    """
+    input:
+        #[f'{output_dir}/pre_munge/{key}.tsv' for key, value in phenotypes.items()],
+        #[f'{output_dir}/munge/{key}.sumstats.gz' for key, value in phenotypes.items()],
+        [f'{output_dir}/ldsc/{key}.log' for key, value in phenotypes.items()],
+
+rule ldsc_prep:
+    params:
+        summary_stats = lambda wc: phenotypes[wc.phenotype].stats_path,
+        gwas_software = lambda wc: phenotypes[wc.phenotype].gwas_software,
+        chrom_col = lambda wc: phenotypes[wc.phenotype].chrom_col,
+        pos_col = lambda wc: phenotypes[wc.phenotype].pos_col,
+        ea_col =lambda wc: phenotypes[wc.phenotype].effect_allele_col,
+        non_ea_col =lambda wc: phenotypes[wc.phenotype].non_effect_allele_col,
+        eaf_col = lambda wc: phenotypes[wc.phenotype].effect_af,
+        beta_col = lambda wc: phenotypes[wc.phenotype].beta_col,
+        se_col = lambda wc: phenotypes[wc.phenotype].se_col,
+        pval_col = lambda wc: phenotypes[wc.phenotype].pval_col,
+        id_col = lambda wc: phenotypes[wc.phenotype].id_col,
+        total_n_col = lambda wc: phenotypes[wc.phenotype].total_n,
+        control_n_col = lambda wc: phenotypes[wc.phenotype].control_n, 
+        case_n_col = lambda wc: phenotypes[wc.phenotype].case_n,
+        calculated_total = lambda wc: phenotypes[wc.phenotype].calculated_total
+    input:
+        summary_stats = lambda wc: phenotypes[wc.phenotype].stats_path,
+        rsid_map = rsid_map
+    output:
+        out= '{output_dir}/pre_munge/{phenotype}.tsv'
+    log:
+        "{output_dir}/pre_munge/{phenotype}.log"
+    shell:
+        "python pre_munge.py " 
+        "--gwas-software {params.gwas_software} "
+        "--gwas-results {input.summary_stats} "
+        "--calculated-total {params.calculated_total} "
+        "--output-file {output.out} "
+        "--rsid-map {input.rsid_map} "
+        "--chrom-col \{params.chrom_col} "
+        "--pos-col {params.pos_col} "
+        "--ea {params.ea_col} "
+        "--non-ea {params.non_ea_col} "
+        "--eaf {params.eaf_col} "
+        "--beta {params.beta_col} "
+        "--pval {params.pval_col} "
+        "--se {params.se_col} "
+        "--variant-id {params.id_col} "
+        "--n-case {params.case_n_col} "
+        "--n-control {params.control_n_col} "
+        "--n-total {params.total_n_col} &> {log}"
+
+rule munge:
+    input:
+        pre_munge_output = '{output_dir}/pre_munge/{phenotype}.tsv',
+        munge_script = munge_script,
+        hapmap = hapmap
+    output:
+        '{output_dir}/munge/{phenotype}.sumstats.gz'
+    params:
+        out_name = '{output_dir}/munge/{phenotype}'
+    conda:
+        ldsc_env
+    shell:
+        "python2 {input.munge_script} "
+        "--sumstats {input.pre_munge_output} "
+        "--merge-alleles {input.hapmap} "
+        "--chunksize 500000 "
+        "--N-col N "
+        "--a1 A1 "
+        "--snp ID "
+        "--a2 A2 "
+        "--p Pval "
+        "--signed-sumstats OR,1 "
+        "--frq EAF "
+        "--out {params.out_name}"
+    
+
+rule ldsc:
+    input:
+        munge_output = '{output_dir}/munge/{phenotype}.sumstats.gz',
+        ldsc_script = ldsc_script,
+        w_ld_chr = w_ld_chr,
+    output:
+        '{output_dir}/ldsc/{phenotype}.log'
+    params:
+        out_name = '{output_dir}/ldsc/{phenotype}',
+        pop_prev = lambda wc: phenotypes[wc.phenotype].pop_prev,
+        sample_prev = lambda wc: phenotypes[wc.phenotype].sample_prev,
+    conda:
+        ldsc_env
+    shell:
+        "python2 {input.ldsc_script} "
+        "--h2 {input.munge_output} "
+        "--ref-ld-chr {input.w_ld_chr}/ "
+        "--w-ld-chr {input.w_ld_chr}/ "
+        "--samp-prev {params.sample_prev} "
+        "--pop-prev {params.pop_prev} "
+        "--out {params.out_name}"
+
+
