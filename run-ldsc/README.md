@@ -1,8 +1,5 @@
 # Helper workflow to run ldsc (linkage score disequilibrium on all aligned gwas summary stats)
 
-## Get LDSC
-This repository includes ldsc v1.0.1 (originally used) however if there are issues or you wish to make a fresh clone follow the instructions here, but be sure to delete the existing ldsc directory. https://github.com/bulik/ldsc
-
 ## Required inputs
 This is intended to be run on all aligned gwas summary stats produced by gwasqc. The required inputs are as follows:
 1) Map file (example provided in example_input/map_file.tsv)
@@ -12,6 +9,9 @@ This is intended to be run on all aligned gwas summary stats produced by gwasqc.
 
 ## Running the workflow
 ```bash
+# Clone LDSC
+git clone https://github.com/bulik/ldsc.git
+
 conda env create -f environment.yml
 conda activate run_ldsc
 poetry install
