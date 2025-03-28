@@ -1,4 +1,4 @@
-name: summix_snkmk
+name: snkmk_summix
 channels:
   - bioconda
   - conda-forge

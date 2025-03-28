@@ -1,6 +1,6 @@
 # Run SUMMIX
 
-## This repository holds the code used to run summix on all gnomAD aligned summary stats, and meta-analyzed mixed ancestry results for generation of custom ldsc results. 
+## This repository holds the code used to run Summix2[https://github.com/hendriau/Summix] on all gnomAD aligned summary stats, and meta-analyzed mixed ancestry results for generation of custom LDSC reference files. 
 
 ## Required Inputs:
 * map file of meta data used in `gwasqc`
@@ -15,8 +15,10 @@ This repository comes with test data, use this an example for your own input dat
 ## Snakemake workflow for all aligned results
 ```bash
 conda env create -f environment.yml
-conda activate summix_snkmk
+conda activate snkmk_summix
+poetry install
 snakemake --cores 1 --configfile config.yaml --snakefile Snakefile --use-conda --conda-frontend conda --dry-run
+```
 
 ## Simple bash script for running summix on metal results
 ```bash
