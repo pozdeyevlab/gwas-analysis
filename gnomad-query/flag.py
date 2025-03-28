@@ -4,7 +4,7 @@ Module to read in gnomad reference and flag variants that have an AN less than 5
 import csv
 import re
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List
 
 import defopt
 import polars as pl
@@ -17,7 +17,7 @@ def read_reference(
     gnomad_tsv: Path,
     output_tsv: Path,
 ) -> None:
-    """"
+    """ "
     :param gnomad_tsv: Path to gnomAD reference file
     :param output_tsv: Path to output file
 
@@ -27,14 +27,10 @@ def read_reference(
     an_column = "[76]AN"
 
     # Read in only necessary columns
-    names_dict = _make_names_dict(
-        allele_number=an_column, header=header
-    )
+    names_dict = _make_names_dict(allele_number=an_column, header=header)
 
     # Read in only necessary columns
-    dtypes_dict = _make_dtypes_dict(
-        allele_number=an_column, header=header
-    )
+    dtypes_dict = _make_dtypes_dict(allele_number=an_column, header=header)
 
     try:
         gnomad_pl: pl.DataFrame = pl.read_csv(
@@ -54,12 +50,12 @@ def read_reference(
 
     # Filter for AN < 50% of max(AN)
     max_an = gnomad_pl["AN"].max()
-    gnomad_pl = gnomad_pl.filter(pl.col("AN") < max_an/2)
+    gnomad_pl = gnomad_pl.filter(pl.col("AN") < max_an / 2)
 
     # Add ID column
     # Create the 'ID' column by concatenating values from 'CHR', 'POS', 'REF', and 'ALT'
     id_column = (
-        gnomad_pl["CHR"].str.replace('chr', '')
+        gnomad_pl["CHR"].str.replace("chr", "")
         + pl.lit(":")
         + gnomad_pl["POS"].cast(str)
         + pl.lit(":")
@@ -75,9 +71,7 @@ def read_reference(
     gnomad_pl.write_csv(output_tsv, separator="\t")
 
 
-def _make_names_dict(
-    allele_number: str, header: List[str]
-) -> dict:
+def _make_names_dict(allele_number: str, header: List[str]) -> dict:
     dtypes = {}
 
     # Constants
@@ -98,9 +92,7 @@ def _make_names_dict(
     return dtypes
 
 
-def _make_dtypes_dict(
-    allele_number: str, header: List[str]
-) -> dict:
+def _make_dtypes_dict(allele_number: str, header: List[str]) -> dict:
     dtypes = {}
 
     # Constants
