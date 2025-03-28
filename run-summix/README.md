@@ -1,6 +1,6 @@
 # Run SUMMIX
 
-## This repository holds the code used to run Summix2[https://github.com/hendriau/Summix] on all gnomAD aligned summary stats, and meta-analyzed mixed ancestry results for generation of custom LDSC reference files. 
+## This repository holds the code used to run [Summix2](https://github.com/hendriau/Summix) on all gnomAD aligned summary stats, and meta-analyzed mixed ancestry results for generation of custom LDSC reference files. 
 
 ## Required Inputs:
 * map file of meta data used in `gwasqc`
