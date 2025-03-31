@@ -9,6 +9,8 @@ This is intended to be run on all aligned gwas summary stats produced by gwasqc.
 
 ## Running the workflow
 Please note there is no example data. Please see [LDSC](https://github.com/bulik/ldsc.git) for details. This workflow simply runs LDSC on all aligned summary stats. 
+
+** You must add the LDSC output to meta data to successfully run [run-metal](https://github.com/pozdeyevlab/gwas-analysis/tree/main/run-metal)**
 ```bash
 # Clone LDSC
 git clone https://github.com/bulik/ldsc.git
