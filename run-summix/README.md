@@ -23,6 +23,6 @@ snakemake --cores 1 --configfile config.yaml --snakefile Snakefile --use-conda -
 ## Simple bash script for running summix on metal results
 ```bash
 conda env create -f r_environment.yml
-conda activate summix
+conda activate summix_r
 bash run_summix_on_metal.sh
 ```

@@ -24,7 +24,7 @@ write.table(header, file=opt$output, quote=FALSE, sep = "\t", row.names=FALSE, c
 ss <- fread(opt$input)
 ss <- ss[grepl("^21:", ss$MarkerName), ]
 ss$MarkerName <- paste0("chr", ss$MarkerName)
-print(ss) 
+
 # loading gnomad 4.0.0 reference for chr21
 gnomad <- fread(opt$reference)
 
