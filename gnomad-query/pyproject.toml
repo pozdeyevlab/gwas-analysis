@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "gnomad_query"
+name = "gnomad-query"
 version = "0.1.0"
 description = ""
 authors = ["sam-white04 <white.samantha@outlook.com>"]
@@ -8,8 +8,8 @@ packages = [{include = "gnomad_query"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-snakemake = "^8.5.3"
-polars = "^0.20.6"
+snakemake = "^9.1.3"
+polars = "^1.26.0"
 defopt = "^6.4.0"
 
 

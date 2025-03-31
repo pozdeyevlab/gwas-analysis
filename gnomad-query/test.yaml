@@ -1,0 +1,3 @@
+vcf:
+  - "gs://gcp-public-data--gnomad/release/4.0/vcf/genomes/gnomad.genomes.v4.0.sites.chr21.vcf.bgz"
+out_dir: "gnomAD"

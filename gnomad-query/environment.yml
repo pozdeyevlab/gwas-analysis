@@ -4,5 +4,5 @@ channels:
   - conda-forge
 dependencies:
   - poetry=1.5.1
-  - python=3.9.1
+  - python=3.11
   - gsutil=5.27

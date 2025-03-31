@@ -2,3 +2,4 @@ gnomAD
 .snakemake/
 test/
 scratch.py
+gnomad_query/
