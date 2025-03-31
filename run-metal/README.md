@@ -1,11 +1,10 @@
 # Inverse Variance Weighted Meta-Analysis & Downstream Processing
 This pipeline is specifically designed to be used in conjunction with the [gwasqc](https://github.com/pozdeyevlab/gwasqc) pipeline. If you wish to use this workflow with your own summary stats, please ensure that your input summary stats have the required columns, discussed _Required USER Provided Input Files_. 
 
-## Environment & Dependency Set Up
-If the steps below do not work please contact samantha.l.white@cuanschutz.edu for assistance. 
+## Environment & Dependency Set Up 
 ```bash
-git clone ''
-cd metal-ldsc
+git clone https://github.com/pozdeyevlab/gwas-analysis.git
+cd gwas-analysis/run-metal
 conda env create -f environment.yml
 conda activate metal
 poetry install
