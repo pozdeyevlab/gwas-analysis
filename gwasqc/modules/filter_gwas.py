@@ -149,41 +149,27 @@ def filter_summary_stats(
     # Remove variants that do not meet QC requirements
     # Beta flags 'beta_gt_threshold' & 'beta_lt_threshold'
     print("QC Summary:")
-    raw_df = (
-        greater_than_filter(
-            raw_df, found_columns.beta, 'beta', 1e6
-        )
-    )
+    raw_df = greater_than_filter(raw_df, found_columns.beta, "beta", 1e6)
 
-    raw_df = (
-        less_than_filter(
-            raw_df, found_columns.beta, 'beta', -1e6
-        )
-    )
+    raw_df = less_than_filter(raw_df, found_columns.beta, "beta", -1e6)
 
     # SE flags 'se_gt_threshold' & 'se_lt_threshold'
-    raw_df = (
-        greater_than_filter(
-            raw_df, found_columns.se, 'standard error', 1e6
-        )
-    )
+    raw_df = greater_than_filter(raw_df, found_columns.se, "standard error", 1e6)
 
-    raw_df = (
-        less_than_filter(
-            raw_df, found_columns.se, 'standard error', -1e6
-        )
-    )
+    raw_df = less_than_filter(raw_df, found_columns.se, "standard error", -1e6)
 
     # Flag p-values equal to 0
     if found_columns.pval is not None:
-        raw_df = (
-            equal_to_flag(raw_df, found_columns.pval, 'pval', 0)
-        )
+        raw_df = equal_to_flag(raw_df, found_columns.pval, "pval", 0)
 
     # Remove variants with imputation less than 0.3
-    raw_df = (
-        less_than_filter(raw_df, found_columns.imputation, 'imputation', 0.3)
-    )
+    if found_columns.imputation is not None:
+        raw_df = raw_df.with_columns(
+            (pl.col(found_columns.imputation).cast(float)).alias(
+                found_columns.imputation
+            )
+        )
+        raw_df = less_than_filter(raw_df, found_columns.imputation, "imputation", 0.3)
 
     # Check that an ID column exists, if not add one named 'MarkerID'
     if found_columns.variant_id is None:
@@ -234,7 +220,8 @@ def filter_summary_stats(
             | (pl.col(found_columns.non_effect_allele).str.contains("-"))
         )
     )
-
+    raw_df = raw_df.filter(~(pl.col(found_columns.effect_allele).str.contains("!")))
+    raw_df = raw_df.filter(~(pl.col(found_columns.non_effect_allele).str.contains("!")))
     # Extract effect and non-effect allele from ID based on position
     raw_df = raw_df.with_columns(
         pl.col(found_columns.variant_id)
@@ -246,11 +233,11 @@ def filter_summary_stats(
     raw_df = raw_df.with_columns(
         pl.col(found_columns.variant_id)
         .str.split(":")
-        .apply(lambda arr: arr[2])
+        .map_elements(lambda arr: arr[2])
         .alias("Non_Effect_Allele_From_ID"),
         pl.col(found_columns.variant_id)
         .str.split(":")
-        .apply(lambda arr: arr[3])
+        .map_elements(lambda arr: arr[3])
         .alias("Effect_Allele_From_ID"),
     )
 
@@ -291,13 +278,13 @@ def filter_summary_stats(
     # Transcribe effect and non-effect allele
     raw_df = raw_df.with_columns(
         pl.col(found_columns.effect_allele)
-        .apply(_transcribe_alleles)
+        .map_elements(_transcribe_alleles)
         .alias(found_columns.transcribed_effect_allele)
     )
 
     raw_df = raw_df.with_columns(
         pl.col(found_columns.non_effect_allele)
-        .apply(_transcribe_alleles)
+        .map_elements(_transcribe_alleles)
         .alias(found_columns.transcribed_non_effect_allele)
     )
 
@@ -331,7 +318,7 @@ def filter_summary_stats(
     total = filter_end - filter_start
     print(f"\nColumn Map for chr{chromosome}:\n{found_columns}\n")
     print(f"Completed reading and filtering {gwas_results} chr{chromosome} in {total}")
-
+    print(final_results)
     return final_results
 
 
@@ -354,7 +341,7 @@ def read_gwas(
             filename,
             truncate_ragged_lines=True,
             separator=sep,
-            dtypes={column_map.chrom: str, column_map.pos: int},
+            dtypes={column_map.chrom: str, column_map.pos: int, column_map.eaf: float},
         ).filter(pl.col(column_map.chrom).str.replace("chr", "") == str(chromosome))
 
     else:
@@ -364,12 +351,17 @@ def read_gwas(
                 truncate_ragged_lines=True,
                 separator=sep,
                 null_values=["NA"],
-                dtypes={column_map.chrom: str, column_map.pos: int},
+                dtypes={
+                    column_map.chrom: str,
+                    column_map.pos: int,
+                    column_map.eaf: float,
+                },
             )
             .filter(pl.col(column_map.chrom).str.replace("chr", "") == str(chromosome))
             .collect()
         )
 
+    print(gwas)
     return gwas.with_columns(
         pl.col(column_map.pos).cast(pl.Int64()).alias(column_map.pos)
     )
@@ -393,15 +385,15 @@ def greater_than_filter(
     starting_count = polars_df.shape[0]
     if column_name is not None:
         # Only keep records that are less than (filtering out greater than)
-        polars_df = polars_df.filter(
-            pl.col(column_name) < threshold
-        )
+        polars_df = polars_df.filter(pl.col(column_name) < threshold)
         print(
             f"Found and removed {starting_count-polars_df.shape[0]} variants with {test_type} greater than {threshold}"
         )
         return polars_df
     else:
-        print(f"Atempted to filter for (remove) variants with {test_type} greater than {threshold}\nProvided column name did does not exist, returning un-filtered data frame\n")
+        print(
+            f"Atempted to filter for (remove) variants with {test_type} greater than {threshold}\nProvided column name did does not exist, returning un-filtered data frame\n"
+        )
         return polars_df
 
 
@@ -423,15 +415,15 @@ def less_than_filter(
     starting_count = polars_df.shape[0]
     if column_name is not None:
         # Only keep records that are greater than (filtering out less than)
-        polars_df = polars_df.filter(
-            pl.col(column_name) > threshold
-        )
+        polars_df = polars_df.filter(pl.col(column_name) > threshold)
         print(
             f"Found and removed {starting_count-polars_df.shape[0]} variants with {test_type} less than {threshold}"
         )
         return polars_df
     else:
-        print(f"Atempted to filter for (remove) variants with {test_type} less than {threshold}\nProvided column name did does not exist, returning un-filtered data frame\n")
+        print(
+            f"Atempted to filter for (remove) variants with {test_type} less than {threshold}\nProvided column name did does not exist, returning un-filtered data frame\n"
+        )
         return polars_df
 
 
@@ -453,15 +445,15 @@ def equal_to_flag(
     starting_count = polars_df.shape[0]
     if column_name is not None:
         # Only keep records that are not equal to threshold than (filtering out equal to)
-        polars_df = polars_df.filter(
-            pl.col(column_name) != threshold
-        )
+        polars_df = polars_df.filter(pl.col(column_name) != threshold)
         print(
             f"Found and removed {starting_count-polars_df.shape[0]} variants with {test_type} equal to {threshold}"
         )
         return polars_df
     else:
-        print(f"Atempted to filter for (remove) variants with {test_type} equal to {threshold}\nProvided column name did does not exist, returning un-filtered data frame\n")
+        print(
+            f"Atempted to filter for (remove) variants with {test_type} equal to {threshold}\nProvided column name did does not exist, returning un-filtered data frame\n"
+        )
         return polars_df
 
 

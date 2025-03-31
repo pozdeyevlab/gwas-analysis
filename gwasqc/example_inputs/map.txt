@@ -1,0 +1,2 @@
+BIOBANK	PHENOTYPE	SEX	ANCESTRY	GWAS_SOFTWARE	CHROM	POS	Effect_Allele	Non_Effect_Allele	Effect_AF	BETA	SE	PVAL	ID	IMPUTE	MAC	Total_N	Case_N	Control_N	PATH	Case_Count	Control_Count
+FinnGen	thyroid_cancer	both	EUR	saige	#chrom	pos	alt	ref	af_alt	beta	sebeta	pval							example_inputs/summary_stat.tsv	2859	378749

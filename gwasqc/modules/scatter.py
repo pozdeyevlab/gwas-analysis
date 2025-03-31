@@ -1,4 +1,5 @@
 """Make plots for deciding qc cut-offs"""
+
 from pathlib import Path
 
 import defopt
@@ -39,7 +40,7 @@ def plot(
         "outlier_pval",
         "outlier_stdev",
         "mahalanobis",
-        "GNOMAD_AN_Flag"
+        "GNOMAD_AN_Flag",
     ]
 
     # Read specific columns from all files into a single polars DF
@@ -67,7 +68,9 @@ def plot(
     for alignment_method in alignment_methods:
         # Scatterplots
         axes[0, 0].scatter(
-            combined_df.filter((pl.col("Alignment_Method") == alignment_method))["AF_gnomad"],
+            combined_df.filter((pl.col("Alignment_Method") == alignment_method))[
+                "AF_gnomad"
+            ],
             combined_df.filter((pl.col("Alignment_Method") == alignment_method))[
                 "Aligned_AF"
             ],
@@ -141,8 +144,12 @@ def plot(
 
     # Mahalanobis & An Flags
     axes[2, 0].scatter(
-        combined_df.filter((pl.col("outlier_stdev") == out) & (pl.col("GNOMAD_AN_Flag") == 0))["AF_gnomad"],
-        combined_df.filter((pl.col("outlier_stdev") == out) & (pl.col("GNOMAD_AN_Flag") == 0))["Aligned_AF"],
+        combined_df.filter(
+            (pl.col("outlier_stdev") == out) & (pl.col("GNOMAD_AN_Flag") == 0)
+        )["AF_gnomad"],
+        combined_df.filter(
+            (pl.col("outlier_stdev") == out) & (pl.col("GNOMAD_AN_Flag") == 0)
+        )["Aligned_AF"],
         label=out,
         s=10,
     )

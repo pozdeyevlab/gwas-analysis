@@ -1,6 +1,7 @@
 """
 Handles Palindromic variants
 """
+
 from collections import namedtuple
 from typing import List, Optional
 
@@ -37,7 +38,6 @@ def harmonize(
     :param col_map: Class of columns
     """
     list_of_results: List[AlignmentResults] = []
-    
 
     # Check for variants with exact alignment (ref=ref & alt=alt)
     exact: AlignmentResults = align_alleles(
@@ -61,8 +61,10 @@ def harmonize(
         id_column="Flipped_Allele_ID",
         method="inverse_match",
     )
-    
-    if (inverse.aligned_and_merged is not None) and (exact.aligned_and_merged is not None):
+
+    if (inverse.aligned_and_merged is not None) and (
+        exact.aligned_and_merged is not None
+    ):
         results = handle_palindromic_variants(
             exact_pl=exact.aligned_and_merged,
             inverse_pl=inverse.aligned_and_merged,
@@ -135,7 +137,9 @@ def harmonize(
         stacked_pl.with_columns(
             (abs(pl.col("AF_gnomad") - pl.col("Aligned_AF"))).alias("ABS_DIF_AF")
         )
-        .with_columns(((pl.col("AF_gnomad") / pl.col("Aligned_AF"))).alias("FOLD_CHANGE_AF"))
+        .with_columns(
+            ((pl.col("AF_gnomad") / pl.col("Aligned_AF"))).alias("FOLD_CHANGE_AF")
+        )
         .with_columns(
             (
                 pl.when(
@@ -191,7 +195,7 @@ def harmonize(
     print(
         f"Total aligned palindromic varinats with a fold change greater than 2 (gnomad_af/gwas_af): {fold_change_count}"
     )
-    
+
     return stacked_pl
 
 
@@ -232,7 +236,9 @@ def align_alleles(
         method: The descriptor for what alignemtn method is being tested
     """
     # Remove chr from both ID's if present
-    gnomad_df = gnomad_df.with_columns((pl.col("ID_gnomad").str.replace("chr", "")).alias("ID_gnomad"))
+    gnomad_df = gnomad_df.with_columns(
+        (pl.col("ID_gnomad").str.replace("chr", "")).alias("ID_gnomad")
+    )
 
     gwas_df = gwas_df.with_columns(
         (pl.col(id_column).str.replace("chr", "")).alias(id_column)

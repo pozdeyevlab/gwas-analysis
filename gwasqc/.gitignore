@@ -1,2 +1,3 @@
 modules/__pycache__/*
-poetry.lock
+gwas-qc/
+example_output

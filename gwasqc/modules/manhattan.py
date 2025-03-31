@@ -1,4 +1,5 @@
 """Make QQ & Manhattan Plots"""
+
 from pathlib import Path
 
 import defopt
@@ -38,14 +39,12 @@ def plot(
         "POS_gnomad",
         "REF_gnomad",
         "ALT_gnomad",
-        "GNOMAD_AN_Flag"
+        "GNOMAD_AN_Flag",
     ]
 
     # Read specific columns from all files into a single polars DF
     print(f"File used: {file_path}")
-    combined_df = _read_specific_columns(
-        file_path, columns_to_read, pval_col
-    )
+    combined_df = _read_specific_columns(file_path, columns_to_read, pval_col)
 
     # Manhattan plots for common and rare variants & qqplots
     figure, axes = plt.subplots(nrows=2, ncols=3, figsize=(50, 20))
@@ -101,12 +100,14 @@ def _make_plot(
     pval_col: str,
     maf_cutoff: str,
 ) -> None:
-    df = df.with_columns((pl.col("CHR_gnomad").str.replace("chr", "")).alias("CHR_gnomad"))
+    df = df.with_columns(
+        (pl.col("CHR_gnomad").str.replace("chr", "")).alias("CHR_gnomad")
+    )
     df = df.with_columns((pl.col("POS_gnomad").cast(int)).alias("POS_gnomad"))
     df = df.with_columns((pl.col("STUDY_ID").str.replace("X", "23")).alias("STUDY_ID"))
-    df = df.with_columns((pl.col("CHR_gnomad").str.replace("X", "23")).cast(int).alias("CHR_gnomad")).sort(
-        "CHR_gnomad", "POS_gnomad"
-    )
+    df = df.with_columns(
+        (pl.col("CHR_gnomad").str.replace("X", "23")).cast(int).alias("CHR_gnomad")
+    ).sort("CHR_gnomad", "POS_gnomad")
 
     if maf_cutoff.lower() == "common":
         df_filtered = df.filter(pl.col("Aligned_AF") > 0.05)
@@ -163,12 +164,12 @@ def _read_specific_columns(file, columns, pval_col):
         pl.col("CHR_gnomad").cast(str).str.replace("chr", "").alias("CHR_gnomad")
     )
     df = df.filter(pl.col(pval_col).is_not_null())
-    df = df.filter(pl.col("GNOMAD_AN_Flag") == 0).filter(pl.col('outlier_stdev') =='No')
+    df = df.filter(pl.col("GNOMAD_AN_Flag") == 0).filter(
+        pl.col("outlier_stdev") == "No"
+    )
 
     if pval_col == "LOG10P":
-        df = df.with_columns(
-            (10 ** (-1 * pl.col(pval_col))).alias(pval_col)
-        )
+        df = df.with_columns((10 ** (-1 * pl.col(pval_col))).alias(pval_col))
 
     return df
 

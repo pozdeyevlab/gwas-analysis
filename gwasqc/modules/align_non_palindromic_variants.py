@@ -1,7 +1,7 @@
 """
 Align non-palindromic variants
 
-This module is used to align non-palindromic variants. 
+This module is used to align non-palindromic variants.
 In order to compare variants from multiple biobanks it is crucial to align variants to a common reference. This module handles non-palindromic variants and checks for the following scenarios:
 
 1) Exact match - study reference == gnoamd reference & study alternate == gnomad alternate
@@ -9,11 +9,12 @@ In order to compare variants from multiple biobanks it is crucial to align varia
 3) Exact transcribed match - transcribed study reference == gnoamd reference & transcribed study alternate == gnomad alternate
 4) Inverse transcribed match - transcribed study reference == gnoamd alternate & transcribed study alternate == gnomad reference
 
-This module also handles complementary variants. Meaning a study variant in whcih both exact and inverse matches are valid gnomad variants. In these cases the gnoamd variant with the allele frequency closest to the study frequency is assigned as the true match. 
+This module also handles complementary variants. Meaning a study variant in whcih both exact and inverse matches are valid gnomad variants. In these cases the gnoamd variant with the allele frequency closest to the study frequency is assigned as the true match.
 
 Alignment Logic:
-In order to avoid OOM errors this module uses set comparison to determine matches between the study and gnomad. For each possible match (exact, inverse, exact transcribed, and inverse transcribed) two sets of variant ID's are created. The first is consisted for all scenarios, the gnomad set, the second changes according to the scenario, this is from the study. The set intersection is used to create an new data frame, and the alignment method writted to the column 'Alignment Method'. After all scenarios have been checked data frames containing 
+In order to avoid OOM errors this module uses set comparison to determine matches between the study and gnomad. For each possible match (exact, inverse, exact transcribed, and inverse transcribed) two sets of variant ID's are created. The first is consisted for all scenarios, the gnomad set, the second changes according to the scenario, this is from the study. The set intersection is used to create an new data frame, and the alignment method writted to the column 'Alignment Method'. After all scenarios have been checked data frames containing
 """
+
 from collections import namedtuple
 from typing import List, Optional
 
@@ -71,13 +72,13 @@ def harmonize(
         method="exact_match",
     )
     # Calculate the variants with an abs difference in AF between study and gnomad greater than 0.1
-    #likely_exact = (
+    # likely_exact = (
     #    exact.aligned_and_merged.with_columns(
     #        ABS_DIF_AF=abs(pl.col("AF_gnomad") - pl.col(col_map.eaf))
     #    )
     #    .filter(pl.col("ABS_DIF_AF") < 0.05)
     #    .drop("ABS_DIF_AF")
-    #)
+    # )
 
     # Inverse (ref=alt & alt=ref)
     gwas_pl = _make_id_column(
@@ -85,7 +86,9 @@ def harmonize(
         col_map=col_map,
         first_allele=col_map.effect_allele,
         second_allele=col_map.non_effect_allele,
-        polars_df=gwas_pl.join(exact.aligned_and_merged, on=col_map.variant_id, how="anti"),
+        polars_df=gwas_pl.join(
+            exact.aligned_and_merged, on=col_map.variant_id, how="anti"
+        ),
     )
 
     inverse: AlignmentResults = align_alleles(
@@ -94,7 +97,9 @@ def harmonize(
         id_column="Flipped_Allele_ID",
         method="inverse_match",
     )
-    if (inverse.aligned_and_merged is not None) and (exact.aligned_and_merged is not None):
+    if (inverse.aligned_and_merged is not None) and (
+        exact.aligned_and_merged is not None
+    ):
         results = handle_complementary_variants(
             exact_pl=exact.aligned_and_merged,
             inverse_pl=inverse.aligned_and_merged,
@@ -139,7 +144,7 @@ def harmonize(
         gnomad_df=gnomad_pl,
         gwas_df=gwas_pl,
         id_column="Transcribed_Flipped_ID",
-        method="transcribed_fliped_match",
+        method="transcribed_flipped_match",
     )
     list_of_results.append(transcribed_flipped)
 
@@ -261,7 +266,9 @@ def align_alleles(
         method: The descriptor for what alignemtn method is being tested
     """
     # Remove chr from both ID's if present
-    gnomad_df = gnomad_df.with_columns(pl.col("ID_gnomad").str.replace("chr", "").alias("ID_gnomad"))
+    gnomad_df = gnomad_df.with_columns(
+        pl.col("ID_gnomad").str.replace("chr", "").alias("ID_gnomad")
+    )
 
     gwas_df = gwas_df.with_columns(
         pl.col(id_column).str.replace("chr", "").alias(id_column)
@@ -308,11 +315,25 @@ def handle_complementary_variants(
     print(exact_pl)
     exact_pl_subset = exact_pl.with_columns(
         ABS_DIF_AF=abs((pl.col("AF_gnomad") - pl.col(col_map.eaf)))
-    ).select(col_map.variant_id, col_map.eaf, "ABS_DIF_AF", "AF_gnomad", "REF_gnomad", "ALT_gnomad")
+    ).select(
+        col_map.variant_id,
+        col_map.eaf,
+        "ABS_DIF_AF",
+        "AF_gnomad",
+        "REF_gnomad",
+        "ALT_gnomad",
+    )
 
     inverse_pl_subset = inverse_pl.with_columns(
         ABS_DIF_AF=abs((pl.col("AF_gnomad") - (1 - pl.col(col_map.eaf))))
-    ).select(col_map.variant_id, col_map.eaf, "ABS_DIF_AF", "AF_gnomad", "REF_gnomad", "ALT_gnomad")
+    ).select(
+        col_map.variant_id,
+        col_map.eaf,
+        "ABS_DIF_AF",
+        "AF_gnomad",
+        "REF_gnomad",
+        "ALT_gnomad",
+    )
 
     joined = (
         exact_pl_subset.join(inverse_pl_subset, on=col_map.variant_id, how="inner")
@@ -327,20 +348,35 @@ def handle_complementary_variants(
     # Remove variants from exact match that are more likely to be an inverse match
     exact_pl = exact_pl.filter(
         ~(pl.col(col_map.variant_id).is_in(joined[col_map.variant_id]))
-    ).with_columns(test=pl.col('CHR_gnomad').cast(str)+':'+pl.col('POS_gnomad').cast(str)+':'+pl.col('REF_gnomad')+':'+pl.col('ALT_gnomad'))
+    ).with_columns(
+        test=pl.col("CHR_gnomad").cast(str)
+        + ":"
+        + pl.col("POS_gnomad").cast(str)
+        + ":"
+        + pl.col("REF_gnomad")
+        + ":"
+        + pl.col("ALT_gnomad")
+    )
 
     # Propery format inverse.aligned_and_merged
     inverse_pl = inverse_pl.filter(
         (~(pl.col(col_map.variant_id).is_in(exact_pl[col_map.variant_id])))
         | (pl.col(col_map.variant_id).is_in(joined[col_map.variant_id]))
-    ).with_columns(test=pl.col('CHR_gnomad').cast(str)+':'+pl.col('POS_gnomad').cast(str)+':'+pl.col('REF_gnomad')+':'+pl.col('ALT_gnomad'))
+    ).with_columns(
+        test=pl.col("CHR_gnomad").cast(str)
+        + ":"
+        + pl.col("POS_gnomad").cast(str)
+        + ":"
+        + pl.col("REF_gnomad")
+        + ":"
+        + pl.col("ALT_gnomad")
+    )
 
     # Handle Potential Duplicates
-    print(len(set(inverse_pl['test']) & set(exact_pl['test'])))
+    print(len(set(inverse_pl["test"]) & set(exact_pl["test"])))
     results = namedtuple("results", ["exact", "inverse"])
     return results(exact_pl, inverse_pl)
 
 
 if __name__ == "__main__":
     defopt.run(harmonize)
-

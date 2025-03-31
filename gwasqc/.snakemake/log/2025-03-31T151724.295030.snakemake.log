@@ -1,0 +1,56 @@
+Assuming unrestricted shared filesystem usage.
+None
+host: ENDO-M-027L7J4
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 2
+Rules claiming more threads will be scaled down.
+Job stats:
+job                                          count
+-----------------------------------------  -------
+align_FinnGen_thyroid_cancer_both_EUR            1
+all                                              1
+manhattan_FinnGen_thyroid_cancer_both_EUR        1
+scatter_FinnGen_thyroid_cancer_both_EUR          1
+total                                            4
+
+Select jobs to execute...
+Execute 1 jobs...
+[Mon Mar 31 15:17:24 2025]
+localrule align_FinnGen_thyroid_cancer_both_EUR:
+    input: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_inputs/gnomAD/flagged
+    output: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv
+    log: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.log
+    jobid: 2
+    reason: Missing output files: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+RuleException:
+CalledProcessError in file "/Users/whitesa3/Desktop/gwas-analysis/gwasqc/Snakefile", line 256:
+Command 'set -euo pipefail;  python modules/combine.py --gnomad-flag-dir example_inputs/gnomAD/flagged --file-paths example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv --output-file example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv &> example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.log' returned non-zero exit status 1.
+[Mon Mar 31 15:17:27 2025]
+Error in rule align_FinnGen_thyroid_cancer_both_EUR:
+    message: None
+    jobid: 2
+    input: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_inputs/gnomAD/flagged
+    output: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv
+    log: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.log (check log file(s) for error details)
+    shell:
+        python modules/combine.py --gnomad-flag-dir example_inputs/gnomAD/flagged --file-paths example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv --output-file example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv &> example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.log
+        (command exited with non-zero exit code)
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look below for error messages
+[Mon Mar 31 15:17:27 2025]
+Error in rule align_FinnGen_thyroid_cancer_both_EUR:
+    message: None
+    jobid: 2
+    input: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_inputs/gnomAD/flagged
+    output: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv
+    log: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.log (check log file(s) for error details)
+    shell:
+        python modules/combine.py --gnomad-flag-dir example_inputs/gnomAD/flagged --file-paths example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv --output-file example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv &> example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.log
+        (command exited with non-zero exit code)
+Complete log(s): /Users/whitesa3/Desktop/gwas-analysis/gwasqc/.snakemake/log/2025-03-31T151724.295030.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.

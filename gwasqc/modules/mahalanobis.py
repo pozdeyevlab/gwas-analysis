@@ -1,6 +1,7 @@
 """
 Calculates mahalanobis distance for gwas-af vs gnomad-af
 """
+
 import defopt
 import numpy as np
 import polars as pl
@@ -29,7 +30,7 @@ def calculate(
     # Calculate Mahalanobis distances for all rows
     mahalanobis_distances = []
     for row in data_np:
-        #a = abs(row[0] - row[1])
+        # a = abs(row[0] - row[1])
         gwas = np.array([row[0], row[0]])
         gnomad = np.array([row[1], row[1]])
 
@@ -55,13 +56,15 @@ def calculate(
             .otherwise(pl.lit("No"))
             .alias("outlier_stdev")
         )
-        .with_columns(mahalanobis_mean=avg["mahalanobis"])
-        .with_columns(mahalanobis_stdev=std["mahalanobis"])
+        .with_columns(mahalanobis_mean=avg["mahalanobis"][0])
+        .with_columns(mahalanobis_stdev=std["mahalanobis"][0])
     )
 
     # Calcualte outlier as pval < 0.001
     aligned_pl = aligned_pl.with_columns(
-        mahalanobis_pval=(1 - aligned_pl["mahalanobis"].apply(lambda x: chi2.cdf(x, 1)))
+        mahalanobis_pval=(
+            1 - aligned_pl["mahalanobis"].map_elements(lambda x: chi2.cdf(x, 1))
+        )
     )
     aligned_pl = aligned_pl.with_columns(
         pl.when(pl.col("mahalanobis_pval") < 0.001)

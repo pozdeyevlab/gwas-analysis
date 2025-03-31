@@ -24,7 +24,6 @@ import attr
 import defopt
 import filter_gwas
 import get_gnomad_ref
-import mahalanobis
 import polars as pl
 
 # pylint: disable=C0301 # line too long
@@ -121,9 +120,6 @@ def harmonize(
     print(f"\nStarting harmonization for chr{chromosome}:")
 
     # Based on chromosome, read in the corresponding gnomad reference and find appropriate AN and AF columns
-
-    # EXCEED has 1-22 and 23 which is listed as 'X' when looking at the 'ID' col
-
     if chromosome == 23:
         chromosome = "X"
         gwas_pl = gwas_pl.with_columns(
@@ -160,8 +156,8 @@ def harmonize(
 
     #################################### Start Alignment Logic #####################################
     # Find the number of non-palindromic inverse pairs in gnomad (chr10:100:A:G & chr10:100:G:A)
-    print(f'gnomad_pl:\n{gnomad_pl}')
-    print(f'gwas_pl:\n{gwas_pl}')
+    print(f"gnomad_pl:\n{gnomad_pl}")
+    print(f"gwas_pl:\n{gwas_pl}")
     palindromic_results: pl.DataFrame = align_palindromic_variants.harmonize(
         gnomad_pl=gnomad_pl,
         gwas_pl=gwas_pl.filter(pl.col(col_map.palindromic_flag) == 1),
@@ -181,7 +177,17 @@ def harmonize(
     # Re-order stacked_pl so that is is easier to read
     reorder = []
 
-    first = ['CHR_gnomad', 'POS_gnomad', 'REF_gnomad', 'ALT_gnomad', 'AF_gnomad', col_map.eaf, 'Aligned_AF', 'Aligned_Beta', 'Alignment_Method']
+    first = [
+        "CHR_gnomad",
+        "POS_gnomad",
+        "REF_gnomad",
+        "ALT_gnomad",
+        "AF_gnomad",
+        col_map.eaf,
+        "Aligned_AF",
+        "Aligned_Beta",
+        "Alignment_Method",
+    ]
 
     reorder.extend(first)
     [reorder.append(x) for x in stacked_pl.columns if x not in first]

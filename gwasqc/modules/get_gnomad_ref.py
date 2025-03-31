@@ -8,6 +8,7 @@ that correspond to the sex and ancestry of the summary stat (if applicable)
 3) Returns a polars df with the following column names 'CHR', 'POS', 'REF', 'ALT', 'AN', 'AF'
 
 """
+
 import csv
 import re
 import sys

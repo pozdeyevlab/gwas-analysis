@@ -93,7 +93,6 @@ map_df: pd.DataFrame = pd.read_csv(map_file, sep='\t')
 for index, row in map_df.iterrows():
     unique_id = f"{row['BIOBANK']}_{row['PHENOTYPE']}_{row['SEX']}_{row['ANCESTRY']}"
     chroms = find_chromosomes(row['PATH'], row['CHROM'], row['GWAS_SOFTWARE'])
-    chroms = list(range(1,22))
     combined[unique_id] = Combine(aligned_files = [f"{output_tsv}/{unique_id}/{chrom}_{unique_id}_aligned_to_gnomad.tsv" for chrom in chroms],
                             pval_col = row['PVAL'],
                             pos_col= row["POS"],

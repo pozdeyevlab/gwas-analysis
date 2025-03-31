@@ -1,0 +1,102 @@
+Assuming unrestricted shared filesystem usage.
+None
+host: ENDO-M-027L7J4
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 2
+Rules claiming more threads will be scaled down.
+Job stats:
+job                                          count
+-----------------------------------------  -------
+align_FinnGen_thyroid_cancer_both_EUR            1
+all                                              1
+filter_and_harmonize                             2
+manhattan_FinnGen_thyroid_cancer_both_EUR        1
+scatter_FinnGen_thyroid_cancer_both_EUR          1
+total                                            6
+
+Select jobs to execute...
+Execute 2 jobs...
+[Mon Mar 31 15:44:22 2025]
+localrule filter_and_harmonize:
+    input: example_inputs/gnomAD/ref
+    output: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_not_aligned_in_gnomad.tsv, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_no_position_in_gnomad.tsv
+    log: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/logs/21_FinnGen_thyroid_cancer_both_EUR_filter_and_harmonize.log
+    jobid: 2
+    reason: Missing output files: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv
+    wildcards: output_tsv=example_output/aligned/FinnGen_thyroid_cancer_both_EUR, phenotype=21_FinnGen_thyroid_cancer_both_EUR
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+[Mon Mar 31 15:44:22 2025]
+localrule filter_and_harmonize:
+    input: example_inputs/gnomAD/ref
+    output: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/22_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/22_FinnGen_thyroid_cancer_both_EUR_not_aligned_in_gnomad.tsv, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/22_FinnGen_thyroid_cancer_both_EUR_no_position_in_gnomad.tsv
+    log: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/logs/22_FinnGen_thyroid_cancer_both_EUR_filter_and_harmonize.log
+    jobid: 1
+    reason: Missing output files: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/22_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv
+    wildcards: output_tsv=example_output/aligned/FinnGen_thyroid_cancer_both_EUR, phenotype=22_FinnGen_thyroid_cancer_both_EUR
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Mon Mar 31 15:44:23 2025]
+Finished jobid: 2 (Rule: filter_and_harmonize)
+1 of 6 steps (17%) done
+[Mon Mar 31 15:44:23 2025]
+Finished jobid: 1 (Rule: filter_and_harmonize)
+2 of 6 steps (33%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Mon Mar 31 15:44:23 2025]
+localrule align_FinnGen_thyroid_cancer_both_EUR:
+    input: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/22_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_inputs/gnomAD/flagged
+    output: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv
+    log: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.log
+    jobid: 3
+    reason: Missing output files: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv; Input files updated by another job: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/22_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Mon Mar 31 15:44:26 2025]
+Finished jobid: 3 (Rule: align_FinnGen_thyroid_cancer_both_EUR)
+3 of 6 steps (50%) done
+Select jobs to execute...
+Execute 2 jobs...
+[Mon Mar 31 15:44:26 2025]
+localrule manhattan_FinnGen_thyroid_cancer_both_EUR:
+    input: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv
+    output: example_output/plots/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_manhattan.png
+    log: example_output/plots/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_manhattan.log
+    jobid: 5
+    reason: Missing output files: example_output/plots/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_manhattan.png; Input files updated by another job: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+[Mon Mar 31 15:44:26 2025]
+localrule scatter_FinnGen_thyroid_cancer_both_EUR:
+    input: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv
+    output: example_output/plots/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_scatter.png
+    log: example_output/plots/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_scatter.log
+    jobid: 4
+    reason: Missing output files: example_output/plots/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_scatter.png; Input files updated by another job: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Mon Mar 31 15:44:30 2025]
+Finished jobid: 4 (Rule: scatter_FinnGen_thyroid_cancer_both_EUR)
+4 of 6 steps (67%) done
+[Mon Mar 31 15:44:34 2025]
+Finished jobid: 5 (Rule: manhattan_FinnGen_thyroid_cancer_both_EUR)
+5 of 6 steps (83%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Mon Mar 31 15:44:34 2025]
+localrule all:
+    input: example_output/aligned/FinnGen_thyroid_cancer_both_EUR/22_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv, example_output/plots/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_scatter.png, example_output/plots/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_manhattan.png
+    jobid: 0
+    reason: Input files updated by another job: example_output/plots/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_manhattan.png, example_output/plots/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_scatter.png, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/FinnGen_thyroid_cancer_both_EUR_aligned_results.tsv, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/21_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv, example_output/aligned/FinnGen_thyroid_cancer_both_EUR/22_FinnGen_thyroid_cancer_both_EUR_aligned_to_gnomad.tsv
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Mon Mar 31 15:44:34 2025]
+Finished jobid: 0 (Rule: all)
+6 of 6 steps (100%) done
+Complete log(s): /Users/whitesa3/Desktop/gwas-analysis/gwasqc/.snakemake/log/2025-03-31T154422.892758.snakemake.log

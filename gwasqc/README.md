@@ -2,9 +2,9 @@
 A custom pipeline for harmonizing REGENIE/SAIGE summary stats from a variety of bio-banks.
 
 # How to use
+Follow the steps below to replicate this analysis. We have provided a sample test set which can be found in `example_inputs`. This example takes a subset of varaints from chromosomes 21 and 22, from publicly available FinnGen data and aligns it to gnomAd.
 
-### Environment & Dependency Set Up
-If the steps below do not work please contact samantha.l.white@cuanschutz.edu for assistance. 
+### Environment & Dependency Set Up 
 ```bash
 git clone https://github.com/pozdeyevlab/gwasqc.git
 cd gwasqc
@@ -13,6 +13,7 @@ conda activate gwas_qc
 poetry install
 # To test correct install try
 python modules/harmonize.py --help
+snakemake --help
 ```
 
 ### Necessary Input files
