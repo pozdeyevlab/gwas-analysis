@@ -1,4 +1,4 @@
-map_file: "eur.tsv"
+map_file: "map.tsv"
 rsid_map: 'full_rsid_map.tsv'
 ldsc_script: 'ldsc/ldsc.py'
 output_dir: "LDSC_OUT"

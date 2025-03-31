@@ -8,6 +8,7 @@ This is intended to be run on all aligned gwas summary stats produced by gwasqc.
 4) In the config file make sure that there is a population prevalence rate that aligns with the diseases listed in the phenotype colum nof the map file.
 
 ## Running the workflow
+Please note there is no example data. Please see [LDSC](https://github.com/bulik/ldsc.git) for details. This workflow simply runs LDSC on all aligned summary stats. 
 ```bash
 # Clone LDSC
 git clone https://github.com/bulik/ldsc.git
