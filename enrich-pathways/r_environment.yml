@@ -1,0 +1,11 @@
+name: enrich
+channels:
+  - conda-forge
+  - r
+  - bioconda
+dependencies:
+  - r-base=4.3.1
+  - r-devtools
+  - r-essentials
+  - conda-forge::r-optparse
+

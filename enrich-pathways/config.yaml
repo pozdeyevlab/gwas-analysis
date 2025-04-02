@@ -1,0 +1,4 @@
+phenotype_genes_dict:
+  example_phenotype_one: "example_inputs/PhenoOne.tsv"
+  example_phenotype_two: "example_inputs/PhenoTwo.tsv"
+output_dir: "example_outputs"
