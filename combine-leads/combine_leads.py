@@ -1,5 +1,5 @@
 """
-This module is used to summarize all lead variants into one complete non-overlapping list. For each phenotype, by chromosome we start with the MOST significant variant, then search +/- 500kb if no other variant is found great, otherwise that variant is kept but flagged as 'FOUND in other region'
+Combines lead variants, and creates count tables
 """
 
 import sys
