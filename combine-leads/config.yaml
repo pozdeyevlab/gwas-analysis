@@ -1,0 +1,2 @@
+map_file: "example_inputs/map.tsv"
+output_dir: "example_outputs"

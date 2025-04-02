@@ -1,0 +1,52 @@
+Assuming unrestricted shared filesystem usage.
+None
+host: ENDO-M-027L7J4
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job              count
+-------------  -------
+all                  1
+combine_leads        6
+total                7
+
+Select jobs to execute...
+Execute 1 jobs...
+[Wed Apr  2 17:16:34 2025]
+localrule combine_leads:
+    output: example_outputs/final_tables/thyroid_cancer_both_most_significant.tsv, example_outputs/final_tables/thyroid_cancer_both_all_ancestries.tsv, example_outputs/final_tables/thyroid_cancer_both_count.tsv
+    log: example_outputs/final_tables/thyroid_cancer_both.log
+    jobid: 1
+    reason: Missing output files: example_outputs/final_tables/thyroid_cancer_both_count.tsv, example_outputs/final_tables/thyroid_cancer_both_all_ancestries.tsv, example_outputs/final_tables/thyroid_cancer_both_most_significant.tsv
+    wildcards: output_dir=example_outputs, phenotype=thyroid_cancer_both
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+RuleException:
+CalledProcessError in file "/Users/whitesa3/Desktop/gwas-analysis/combine-leads/Snakefile", line 111:
+Command 'set -euo pipefail;  python combine_leads.py --files /Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eur_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eas_eas_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_afr_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv --ancestries mixed,eur,eas,afr,amr --sexes both,both,both,both,both --output-most-sig example_outputs/final_tables/thyroid_cancer_both_most_significant.tsv --output-count example_outputs/final_tables/thyroid_cancer_both_count.tsv --output-all-ancestries example_outputs/final_tables/thyroid_cancer_both_all_ancestries.tsv &> example_outputs/final_tables/thyroid_cancer_both.log' returned non-zero exit status 1.
+[Wed Apr  2 17:16:34 2025]
+Error in rule combine_leads:
+    message: None
+    jobid: 1
+    output: example_outputs/final_tables/thyroid_cancer_both_most_significant.tsv, example_outputs/final_tables/thyroid_cancer_both_all_ancestries.tsv, example_outputs/final_tables/thyroid_cancer_both_count.tsv
+    log: example_outputs/final_tables/thyroid_cancer_both.log (check log file(s) for error details)
+    shell:
+        python combine_leads.py --files /Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eur_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eas_eas_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_afr_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv --ancestries mixed,eur,eas,afr,amr --sexes both,both,both,both,both --output-most-sig example_outputs/final_tables/thyroid_cancer_both_most_significant.tsv --output-count example_outputs/final_tables/thyroid_cancer_both_count.tsv --output-all-ancestries example_outputs/final_tables/thyroid_cancer_both_all_ancestries.tsv &> example_outputs/final_tables/thyroid_cancer_both.log
+        (command exited with non-zero exit code)
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look below for error messages
+[Wed Apr  2 17:16:34 2025]
+Error in rule combine_leads:
+    message: None
+    jobid: 1
+    output: example_outputs/final_tables/thyroid_cancer_both_most_significant.tsv, example_outputs/final_tables/thyroid_cancer_both_all_ancestries.tsv, example_outputs/final_tables/thyroid_cancer_both_count.tsv
+    log: example_outputs/final_tables/thyroid_cancer_both.log (check log file(s) for error details)
+    shell:
+        python combine_leads.py --files /Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eur_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eas_eas_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_afr_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv --ancestries mixed,eur,eas,afr,amr --sexes both,both,both,both,both --output-most-sig example_outputs/final_tables/thyroid_cancer_both_most_significant.tsv --output-count example_outputs/final_tables/thyroid_cancer_both_count.tsv --output-all-ancestries example_outputs/final_tables/thyroid_cancer_both_all_ancestries.tsv &> example_outputs/final_tables/thyroid_cancer_both.log
+        (command exited with non-zero exit code)
+Complete log(s): /Users/whitesa3/Desktop/gwas-analysis/combine-leads/.snakemake/log/2025-04-02T171634.390793.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.

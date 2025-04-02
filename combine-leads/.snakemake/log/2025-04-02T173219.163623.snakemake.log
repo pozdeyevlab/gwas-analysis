@@ -1,0 +1,118 @@
+Assuming unrestricted shared filesystem usage.
+None
+host: ENDO-M-027L7J4
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job              count
+-------------  -------
+all                  1
+combine_leads        6
+total                7
+
+Select jobs to execute...
+Execute 1 jobs...
+[Wed Apr  2 17:32:19 2025]
+localrule combine_leads:
+    output: example_outputs/final_tables/graves_both_most_significant.tsv, example_outputs/final_tables/graves_both_all_ancestries.tsv, example_outputs/final_tables/graves_both_count.tsv
+    log: example_outputs/final_tables/graves_both.log
+    jobid: 1
+    reason: Params have changed since last execution: Union of exclusive params before and now across all output: before: 'both,both,both,both','afr,eur,amr,mixed','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_afr_both_leave_none_out_final_summary_with_genes_graves.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eur_both_leave_none_out_final_summary_with_genes_graves.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_graves.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_graves.tsv' now: 'amr','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_graves.tsv','both' 
+    wildcards: output_dir=example_outputs, phenotype=graves_both
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Wed Apr  2 17:32:19 2025]
+Finished jobid: 1 (Rule: combine_leads)
+1 of 7 steps (14%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Wed Apr  2 17:32:19 2025]
+localrule combine_leads:
+    output: example_outputs/final_tables/benign_nodular_goiter_both_most_significant.tsv, example_outputs/final_tables/benign_nodular_goiter_both_all_ancestries.tsv, example_outputs/final_tables/benign_nodular_goiter_both_count.tsv
+    log: example_outputs/final_tables/benign_nodular_goiter_both.log
+    jobid: 4
+    reason: Params have changed since last execution: Union of exclusive params before and now across all output: before: 'eas,amr,afr,mixed,eur','both,both,both,both,both','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eas_eas_both_leave_none_out_final_summary_with_genes_benign_nodular_goiter.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_benign_nodular_goiter.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_afr_both_leave_none_out_final_summary_with_genes_benign_nodular_goiter.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_benign_nodular_goiter.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eur_both_leave_none_out_final_summary_with_genes_benign_nodular_goiter.tsv' now: 'amr','both','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_benign_nodular_goiter.tsv' 
+    wildcards: output_dir=example_outputs, phenotype=benign_nodular_goiter_both
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Wed Apr  2 17:32:19 2025]
+Finished jobid: 4 (Rule: combine_leads)
+2 of 7 steps (29%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Wed Apr  2 17:32:19 2025]
+localrule combine_leads:
+    output: example_outputs/final_tables/hypothyroidism_both_most_significant.tsv, example_outputs/final_tables/hypothyroidism_both_all_ancestries.tsv, example_outputs/final_tables/hypothyroidism_both_count.tsv
+    log: example_outputs/final_tables/hypothyroidism_both.log
+    jobid: 5
+    reason: Params have changed since last execution: Union of exclusive params before and now across all output: before: 'eur,mixed,amr,afr,eas','both,both,both,both,both','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eur_both_leave_none_out_final_summary_with_genes_hypothyroidism.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_hypothyroidism.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_hypothyroidism.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_afr_both_leave_none_out_final_summary_with_genes_hypothyroidism.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eas_eas_both_leave_none_out_final_summary_with_genes_hypothyroidism.tsv' now: 'eas','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eas_eas_both_leave_none_out_final_summary_with_genes_hypothyroidism.tsv','both' 
+    wildcards: output_dir=example_outputs, phenotype=hypothyroidism_both
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Wed Apr  2 17:32:20 2025]
+Finished jobid: 5 (Rule: combine_leads)
+3 of 7 steps (43%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Wed Apr  2 17:32:20 2025]
+localrule combine_leads:
+    output: example_outputs/final_tables/thyroid_cancer_both_most_significant.tsv, example_outputs/final_tables/thyroid_cancer_both_all_ancestries.tsv, example_outputs/final_tables/thyroid_cancer_both_count.tsv
+    log: example_outputs/final_tables/thyroid_cancer_both.log
+    jobid: 2
+    reason: Params have changed since last execution: Union of exclusive params before and now across all output: before: 'mixed,eur,eas,afr,amr','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eur_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eas_eas_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_afr_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv','both,both,both,both,both' now: 'both,both','mixed,afr','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_afr_both_leave_none_out_final_summary_with_genes_thyroid_cancer.tsv' 
+    wildcards: output_dir=example_outputs, phenotype=thyroid_cancer_both
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+Select jobs to execute...
+[Wed Apr  2 17:32:20 2025]
+Finished jobid: 2 (Rule: combine_leads)
+4 of 7 steps (57%) done
+Execute 1 jobs...
+[Wed Apr  2 17:32:20 2025]
+localrule combine_leads:
+    output: example_outputs/final_tables/tc_vs_bng_both_most_significant.tsv, example_outputs/final_tables/tc_vs_bng_both_all_ancestries.tsv, example_outputs/final_tables/tc_vs_bng_both_count.tsv
+    log: example_outputs/final_tables/tc_vs_bng_both.log
+    jobid: 6
+    reason: Params have changed since last execution: Union of exclusive params before and now across all output: before: 'both,both,both','mixed,eur,amr','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_tc_vs_bng.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eur_both_leave_none_out_final_summary_with_genes_tc_vs_bng.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_tc_vs_bng.tsv' now: 'mixed','both','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_tc_vs_bng.tsv' 
+    wildcards: output_dir=example_outputs, phenotype=tc_vs_bng_both
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+Select jobs to execute...
+[Wed Apr  2 17:32:20 2025]
+Finished jobid: 6 (Rule: combine_leads)
+5 of 7 steps (71%) done
+Execute 1 jobs...
+[Wed Apr  2 17:32:20 2025]
+localrule combine_leads:
+    output: example_outputs/final_tables/lymphocytic_thyroiditis_both_most_significant.tsv, example_outputs/final_tables/lymphocytic_thyroiditis_both_all_ancestries.tsv, example_outputs/final_tables/lymphocytic_thyroiditis_both_count.tsv
+    log: example_outputs/final_tables/lymphocytic_thyroiditis_both.log
+    jobid: 3
+    reason: Params have changed since last execution: Union of exclusive params before and now across all output: before: 'both,both,both,both','eur,mixed,amr,eas','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eur_both_leave_none_out_final_summary_with_genes_lymphocytic_thyroiditis.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_lymphocytic_thyroiditis.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_amr_both_leave_none_out_final_summary_with_genes_lymphocytic_thyroiditis.tsv,/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_eas_eas_both_leave_none_out_final_summary_with_genes_lymphocytic_thyroiditis.tsv' now: 'mixed','/Users/whitesa3/Desktop/gwas-analysis/combine-leads/example_inputs/ldsc_adjusted_meta_analysis_feb_four_biobanks_mixed_both_leave_none_out_final_summary_with_genes_lymphocytic_thyroiditis.tsv','both' 
+    wildcards: output_dir=example_outputs, phenotype=lymphocytic_thyroiditis_both
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Wed Apr  2 17:32:20 2025]
+Finished jobid: 3 (Rule: combine_leads)
+6 of 7 steps (86%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Wed Apr  2 17:32:20 2025]
+localrule all:
+    input: example_outputs/final_tables/graves_both_most_significant.tsv, example_outputs/final_tables/thyroid_cancer_both_most_significant.tsv, example_outputs/final_tables/lymphocytic_thyroiditis_both_most_significant.tsv, example_outputs/final_tables/benign_nodular_goiter_both_most_significant.tsv, example_outputs/final_tables/hypothyroidism_both_most_significant.tsv, example_outputs/final_tables/tc_vs_bng_both_most_significant.tsv, example_outputs/final_tables/graves_both_all_ancestries.tsv, example_outputs/final_tables/thyroid_cancer_both_all_ancestries.tsv, example_outputs/final_tables/lymphocytic_thyroiditis_both_all_ancestries.tsv, example_outputs/final_tables/benign_nodular_goiter_both_all_ancestries.tsv, example_outputs/final_tables/hypothyroidism_both_all_ancestries.tsv, example_outputs/final_tables/tc_vs_bng_both_all_ancestries.tsv, example_outputs/final_tables/graves_both_count.tsv, example_outputs/final_tables/thyroid_cancer_both_count.tsv, example_outputs/final_tables/lymphocytic_thyroiditis_both_count.tsv, example_outputs/final_tables/benign_nodular_goiter_both_count.tsv, example_outputs/final_tables/hypothyroidism_both_count.tsv, example_outputs/final_tables/tc_vs_bng_both_count.tsv
+    jobid: 0
+    reason: Input files updated by another job: example_outputs/final_tables/benign_nodular_goiter_both_all_ancestries.tsv, example_outputs/final_tables/tc_vs_bng_both_most_significant.tsv, example_outputs/final_tables/benign_nodular_goiter_both_most_significant.tsv, example_outputs/final_tables/hypothyroidism_both_most_significant.tsv, example_outputs/final_tables/lymphocytic_thyroiditis_both_all_ancestries.tsv, example_outputs/final_tables/tc_vs_bng_both_all_ancestries.tsv, example_outputs/final_tables/lymphocytic_thyroiditis_both_most_significant.tsv, example_outputs/final_tables/tc_vs_bng_both_count.tsv, example_outputs/final_tables/thyroid_cancer_both_count.tsv, example_outputs/final_tables/thyroid_cancer_both_all_ancestries.tsv, example_outputs/final_tables/lymphocytic_thyroiditis_both_count.tsv, example_outputs/final_tables/hypothyroidism_both_count.tsv, example_outputs/final_tables/benign_nodular_goiter_both_count.tsv, example_outputs/final_tables/graves_both_most_significant.tsv, example_outputs/final_tables/graves_both_count.tsv, example_outputs/final_tables/thyroid_cancer_both_most_significant.tsv, example_outputs/final_tables/hypothyroidism_both_all_ancestries.tsv, example_outputs/final_tables/graves_both_all_ancestries.tsv
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Wed Apr  2 17:32:20 2025]
+Finished jobid: 0 (Rule: all)
+7 of 7 steps (100%) done
+Complete log(s): /Users/whitesa3/Desktop/gwas-analysis/combine-leads/.snakemake/log/2025-04-02T173219.163623.snakemake.log

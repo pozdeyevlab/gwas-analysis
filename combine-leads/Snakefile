@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+
+from datetime import datetime
+from itertools import dropwhile
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Union
+
+import attr
+import pandas as pd
+import polars as pl
+
+################################################################################
+# Set Up
+################################################################################
+# Grab the location of various things from the config
+map_file: Path                      = Path(config["map_file"])
+output_dir: Path                    = Path(config["output_dir"])
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Phenotype:
+    """Represents all necessary meta data for each biobank gwas"""
+    ancestries: str
+    sexes: str
+    files: str
+
+# Set up data-structure
+phenotypes: Dict[str, Phenotype] = dict()
+
+# Read in the map file provided from the config
+map_df: pl.DataFrame = pl.from_pandas(pd.read_csv(map_file, sep='\t'))
+
+# Group by sex and phenotype
+grouped = map_df.group_by('sex', 'phenotype')
+for group in grouped:
+    grouped_df = group[1]
+    unique_id = f"{grouped_df['phenotype'].to_list()[0]}_{grouped_df['sex'].to_list()[0]}"
+    ancestries = ','.join(grouped_df['ancestry'].to_list())
+    sexes = ','.join(grouped_df['sex'].to_list())
+    files = ','.join(grouped_df['file'].to_list())
+    phenotypes[unique_id] = Phenotype(ancestries = ancestries, sexes = sexes, files = files)
+################################################################################
+# Directives
+################################################################################
+onerror:
+    """Code that gets called  if / when the snakemake pipeline exits with an error.
+    The `log` variable contains a path to the snakemake log file which can be parsed
+    for more information. Summarizes information on failed jobs and writes it to the
+    output.
+    """
+    try:
+        path = Path(log)
+        RULE_PREFIX = "Error in rule "
+        LOG_PREFIX = "    log: "
+        CMD_PREFIX = "Command "
+
+        with path.open("r") as fh:
+            lines: Iterable[str] = fh.readlines()
+
+        while lines:
+            lines = list(dropwhile(lambda l: not l.startswith(RULE_PREFIX), lines))
+            if lines:
+                rule_name = lines[0].rstrip()[len(RULE_PREFIX) : -1]
+                lines = dropwhile(lambda l: not l.startswith(LOG_PREFIX), lines)
+                log_path = Path(next(lines).rstrip()[len(LOG_PREFIX) :].split()[0])
+
+                print(f"========== Start of Error Info for {rule_name} ==========")
+                print(f"Failed rule: {rule_name}")
+                print(f"Contents of log file: {log_path}")
+                with log_path.open("r") as fh:
+                    for line in fh.readlines():
+                        print(f"    {line.rstrip()}")
+                print(f"=========== End of Error Info for {rule_name} ===========")
+    except Exception as ex:
+        print("################################################")
+        print("Exception raised in snakemake onerror handler.")
+        print(str(ex))
+        print("################################################")
+
+
+################################################################################
+# Beginning of rule declarations
+################################################################################
+rule all:
+    """
+    Default rule that is executed when snakemake runs.  The 'inputs' here list the set of files
+    that the pipeline will generate by default if a specific list isn't provided.
+    """
+    input:
+        [f'{output_dir}/final_tables/{key}_most_significant.tsv' for key, value in phenotypes.items()],
+        [f'{output_dir}/final_tables/{key}_all_ancestries.tsv' for key, value in phenotypes.items()],
+        [f'{output_dir}/final_tables/{key}_count.tsv' for key, value in phenotypes.items()]
+
+rule combine_leads:
+    params:
+        files = lambda wc: phenotypes[wc.phenotype].files,
+        ancestries = lambda wc: phenotypes[wc.phenotype].ancestries,
+        sexes = lambda wc: phenotypes[wc.phenotype].sexes
+    output:
+        most_sig = '{output_dir}/final_tables/{phenotype}_most_significant.tsv',
+        all_ancestries = '{output_dir}/final_tables/{phenotype}_all_ancestries.tsv',
+        count_df = '{output_dir}/final_tables/{phenotype}_count.tsv'
+    log:
+        "{output_dir}/final_tables/{phenotype}.log"
+    shell:
+        "python combine_leads.py " 
+        "--files {params.files} "
+        "--ancestries {params.ancestries} "
+        "--sexes {params.sexes} "
+        "--output-most-sig {output.most_sig} "
+        "--output-count {output.count_df} "
+        "--output-all-ancestries {output.all_ancestries} &> {log}"
