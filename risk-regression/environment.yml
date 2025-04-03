@@ -1,0 +1,11 @@
+name: risk_regression
+channels:
+  - bioconda
+  - conda-forge
+  - r
+dependencies:
+  - poetry=1.5.1
+  - python=3.11
+  - r-base=4.3.1
+  - r-essentials
+  - conda-forge::r-optparse 

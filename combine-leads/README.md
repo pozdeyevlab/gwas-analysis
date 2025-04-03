@@ -13,7 +13,7 @@ Counts -- {output_dir}/final_tables/{phenotype}_{sex}_count.tsv
 Summary -- {output_dir}/final_tables/{phenotype}_{sex}_all_ancestries.tsv
 Most Significant -- {output_dir}/final_tables/{phenotype}_{sex}_most_significant.tsv
 
-## Running the code
+## Environment Build & Running the Workflow
 ```{bash}
 conda env create -f environment.yml
 conda activate combine

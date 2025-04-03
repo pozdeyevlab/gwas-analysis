@@ -7,7 +7,10 @@ This is intended to be run on all aligned gwas summary stats produced by gwasqc.
 3) HapMap snplist, and ldsc reference file (these can be downloaded here: https://ibg.colorado.edu/cdrom2021/Day06-nivard/GenomicSEM_practical/eur_w_ld_chr/, and https://github.com/perslab/CELLECT/blob/master/data/ldsc/w_hm3.snplist)
 4) In the config file make sure that there is a population prevalence rate that aligns with the diseases listed in the phenotype colum nof the map file.
 
-## Running the workflow
+## Outputs
+Each input will generate an output log file which will contain the LDSC results.
+
+## Environment Build & Running the Workflow
 Please note there is no example data. Please see [LDSC](https://github.com/bulik/ldsc.git) for details. This workflow simply runs LDSC on all aligned summary stats. 
 
 ** You must add the LDSC output to meta data to successfully run [run-metal](https://github.com/pozdeyevlab/gwas-analysis/tree/main/run-metal)**

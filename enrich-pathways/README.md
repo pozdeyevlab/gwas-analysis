@@ -8,20 +8,10 @@ To try and understand functional pathways associated with out top-genes we used 
 3) Save tables for Reactome & Kegg results as well as dot plots.
 4) Map EntrezID's back to gene names for easier interpretation.
 
-## Necessary Inputs
+## Required Inputs
 All that is required is a tsv with two columns. The first containing gene names and the second p-values. An example has been provided in `example_inputs`. 
 
 To run this workflow, fill out the `config.yaml` file with your data.
-
-## Running the code
-```bash
-conda env create -f environment.yml
-conda activate snkmk_enrich
-poetry install
-snakemake --cores 2 --configfile config.yaml --use-conda --conda-frontend conda --dry-run
-# Assuming no errors
-snakemake --cores 2 --configfile config.yaml --use-conda --conda-frontend conda
-```
 
 ## Outputs
 This will create the following files in your specified output directory for every phenotype in your configfile
@@ -31,6 +21,16 @@ This will create the following files in your specified output directory for ever
 4) {output_dir}/{phenotype}_entrez_map.tsv = Map between entrez id's and gene names
 5) {output_dir}/{phenotype}_reactome.tsv = Significant kegg pathways (nominal p-value of 0.05)
 6) {output_dir}/{phenotype}_reactome.png = Dot plot for significant reactome pathways
+
+## Environment Build & Running the Workflow
+```bash
+conda env create -f environment.yml
+conda activate snkmk_enrich
+poetry install
+snakemake --cores 2 --configfile config.yaml --use-conda --conda-frontend conda --dry-run
+# Assuming no errors
+snakemake --cores 2 --configfile config.yaml --use-conda --conda-frontend conda
+```
 
 ## Note about the example data
 The provided input data is entirely made up and is not expected to yield meaningful results.
