@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "risk"
+version = "0.1.0"
+description = ""
+authors = ["sam-white04 <white.samantha@outlook.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+polars = "^1.26.0"
+defopt = "^6.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

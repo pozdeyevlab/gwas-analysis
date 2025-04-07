@@ -1,0 +1,63 @@
+Assuming unrestricted shared filesystem usage.
+None
+host: ENDO-M-027L7J4
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job              count
+-------------  -------
+all                  1
+five_fold            2
+format_matrix        2
+total                5
+
+Select jobs to execute...
+Execute 1 jobs...
+[Mon Apr  7 12:32:24 2025]
+localrule five_fold:
+    output: example_output/prscs_five_fold_raw.tsv, example_output/prscs_delong_input.tsv
+    log: example_output/prscs_five_fold_raw.log
+    jobid: 1
+    reason: Code has changed since last execution
+    wildcards: output_dir=example_output, phenotype=prscs
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+Select jobs to execute...
+[Mon Apr  7 12:32:25 2025]
+Finished jobid: 1 (Rule: five_fold)
+1 of 5 steps (20%) done
+Execute 1 jobs...
+[Mon Apr  7 12:32:25 2025]
+localrule format_matrix:
+    input: example_output/prscs_five_fold_raw.tsv
+    output: example_output/prscs_five_fold_matrix.tsv
+    log: example_output/prscs_five_fold_matrix.log
+    jobid: 3
+    reason: Missing output files: example_output/prscs_five_fold_matrix.tsv; Input files updated by another job: example_output/prscs_five_fold_raw.tsv
+    wildcards: output_dir=example_output, phenotype=prscs
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+Waiting at most 5 seconds for missing files:
+example_output/prscs_five_fold_matrix.tsv (missing locally)
+MissingOutputException in rule format_matrix in file "/Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/Snakefile", line 132:
+Job 3  completed successfully, but some output files are missing. Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+example_output/prscs_five_fold_matrix.tsv (missing locally, parent dir contents: prscs_delong_input.tsv, manual_five_fold_raw.tsv, prscs_five_fold_raw.log, prscs_five_fold_raw.tsv, prscs_five_fold_matrix.log, manual_delong_input.tsv, manual_five_fold_raw.log)
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look below for error messages
+[Mon Apr  7 12:32:30 2025]
+Error in rule format_matrix:
+    message: None
+    jobid: 3
+    input: example_output/prscs_five_fold_raw.tsv
+    output: example_output/prscs_five_fold_matrix.tsv
+    log: example_output/prscs_five_fold_matrix.log (check log file(s) for error details)
+    shell:
+        python  modules/format_five_fold.py --input example_output/prscs_five_fold_raw.tsv --output example_output/prscs_five_fold_matrix.tsv &> example_output/prscs_five_fold_matrix.log
+        (command exited with non-zero exit code)
+Complete log(s): /Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/.snakemake/log/2025-04-07T123224.285949.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.

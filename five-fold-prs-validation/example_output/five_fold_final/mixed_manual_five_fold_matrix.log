@@ -1,0 +1,20 @@
+/Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/modules/format_five_fold.py:42: DeprecationWarning: The argument `columns` for `DataFrame.pivot` is deprecated. It has been renamed to `on`.
+  pivot_df = tmp.pivot(values="value", index="prs", columns="predicting")
+shape: (120, 5)
+┌────────────────────────┬───────────────────────┬───────────────────┬──────────┬─────────────┐
+│ prs                    ┆ predicting            ┆ covariates        ┆ mean_auc ┆ mean_auc_se │
+│ ---                    ┆ ---                   ┆ ---               ┆ ---      ┆ ---         │
+│ str                    ┆ str                   ┆ str               ┆ f64      ┆ f64         │
+╞════════════════════════╪═══════════════════════╪═══════════════════╪══════════╪═════════════╡
+│ thyroid_cancer_GBMI_II ┆ thyroid_cancer        ┆ gt_pc             ┆ 0.423485 ┆ 0.141834    │
+│ thyroid_cancer_GBMI_II ┆ thyroid_cancer        ┆ gt_pc_age_sex     ┆ 0.376136 ┆ 0.090304    │
+│ thyroid_cancer_GBMI_II ┆ thyroid_cancer        ┆ gt_pc_age_sex_prs ┆ 0.469697 ┆ 0.123161    │
+│ thyroid_cancer_GBMI_II ┆ thyroid_cancer        ┆ gt_pc_prs         ┆ 0.448106 ┆ 0.183216    │
+│ thyroid_cancer_GBMI_II ┆ thyroid_cancer        ┆ age_sex_only      ┆ 0.488636 ┆ 0.135461    │
+│ …                      ┆ …                     ┆ …                 ┆ …        ┆ …           │
+│ hypothyroidism         ┆ benign_nodular_goiter ┆ gt_pc_age_sex     ┆ 0.49359  ┆ 0.082391    │
+│ hypothyroidism         ┆ benign_nodular_goiter ┆ gt_pc_age_sex_prs ┆ 0.48609  ┆ 0.083169    │
+│ hypothyroidism         ┆ benign_nodular_goiter ┆ gt_pc_prs         ┆ 0.527885 ┆ 0.102772    │
+│ hypothyroidism         ┆ benign_nodular_goiter ┆ age_sex_only      ┆ 0.490385 ┆ 0.120023    │
+│ hypothyroidism         ┆ benign_nodular_goiter ┆ prs_only          ┆ 0.427244 ┆ 0.069579    │
+└────────────────────────┴───────────────────────┴───────────────────┴──────────┴─────────────┘

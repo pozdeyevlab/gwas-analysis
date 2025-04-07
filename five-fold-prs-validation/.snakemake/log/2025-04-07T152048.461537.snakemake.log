@@ -1,0 +1,107 @@
+Assuming unrestricted shared filesystem usage.
+None
+host: ENDO-M-027L7J4
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Conda environments: ignored
+Job stats:
+job              count
+-------------  -------
+all                  1
+delong               1
+five_fold            2
+format_matrix        2
+total                6
+
+Select jobs to execute...
+Execute 1 jobs...
+[Mon Apr  7 15:20:48 2025]
+localrule five_fold:
+    output: real_output/five_fold_raw/mixed_prscs_five_fold_raw.tsv, real_output/delong/mixed_prscs_delong_input.tsv
+    log: real_output/five_fold_raw/mixed_prscs_five_fold_raw.log
+    jobid: 1
+    reason: Missing output files: real_output/delong/mixed_prscs_delong_input.tsv, real_output/five_fold_raw/mixed_prscs_five_fold_raw.tsv
+    wildcards: output_dir=real_output, phenotype=mixed_prscs
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+Select jobs to execute...
+[Mon Apr  7 15:25:00 2025]
+Finished jobid: 1 (Rule: five_fold)
+1 of 6 steps (17%) done
+Execute 1 jobs...
+[Mon Apr  7 15:25:00 2025]
+localrule format_matrix:
+    input: real_output/five_fold_raw/mixed_prscs_five_fold_raw.tsv
+    log: real_output/five_fold_final/mixed_prscs_five_fold_matrix.log
+    jobid: 3
+    reason: Missing output files: real_output/five_fold_final/mixed_prscs_five_fold_matrix.log; Input files updated by another job: real_output/five_fold_raw/mixed_prscs_five_fold_raw.tsv
+    wildcards: output_dir=real_output, phenotype=mixed_prscs
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Mon Apr  7 15:25:00 2025]
+Finished jobid: 3 (Rule: format_matrix)
+2 of 6 steps (33%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Mon Apr  7 15:25:00 2025]
+localrule five_fold:
+    output: real_output/five_fold_raw/mixed_manual_five_fold_raw.tsv, real_output/delong/mixed_manual_delong_input.tsv
+    log: real_output/five_fold_raw/mixed_manual_five_fold_raw.log
+    jobid: 2
+    reason: Missing output files: real_output/five_fold_raw/mixed_manual_five_fold_raw.tsv, real_output/delong/mixed_manual_delong_input.tsv
+    wildcards: output_dir=real_output, phenotype=mixed_manual
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Mon Apr  7 15:27:43 2025]
+Finished jobid: 2 (Rule: five_fold)
+3 of 6 steps (50%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Mon Apr  7 15:27:43 2025]
+localrule delong:
+    input: real_output/delong/mixed_manual_delong_input.tsv, real_output/delong/mixed_prscs_delong_input.tsv
+    output: real_output/delong/mixed_all_p_vals.tsv
+    log: real_output/delong/mixed_all_p_vals.log
+    jobid: 5
+    reason: Missing output files: real_output/delong/mixed_all_p_vals.tsv; Input files updated by another job: real_output/delong/mixed_prscs_delong_input.tsv, real_output/delong/mixed_manual_delong_input.tsv
+    wildcards: output_dir=real_output, phenotype=mixed
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+Select jobs to execute...
+[Mon Apr  7 15:27:47 2025]
+Finished jobid: 5 (Rule: delong)
+4 of 6 steps (67%) done
+Execute 1 jobs...
+[Mon Apr  7 15:27:47 2025]
+localrule format_matrix:
+    input: real_output/five_fold_raw/mixed_manual_five_fold_raw.tsv
+    log: real_output/five_fold_final/mixed_manual_five_fold_matrix.log
+    jobid: 4
+    reason: Missing output files: real_output/five_fold_final/mixed_manual_five_fold_matrix.log; Input files updated by another job: real_output/five_fold_raw/mixed_manual_five_fold_raw.tsv
+    wildcards: output_dir=real_output, phenotype=mixed_manual
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Mon Apr  7 15:27:48 2025]
+Finished jobid: 4 (Rule: format_matrix)
+5 of 6 steps (83%) done
+Select jobs to execute...
+Execute 1 jobs...
+[Mon Apr  7 15:27:48 2025]
+localrule all:
+    input: real_output/five_fold_raw/mixed_prscs_five_fold_raw.tsv, real_output/five_fold_raw/mixed_manual_five_fold_raw.tsv, real_output/delong/mixed_prscs_delong_input.tsv, real_output/delong/mixed_manual_delong_input.tsv, real_output/five_fold_final/mixed_prscs_five_fold_matrix.log, real_output/five_fold_final/mixed_manual_five_fold_matrix.log, real_output/delong/mixed_all_p_vals.tsv
+    jobid: 0
+    reason: Input files updated by another job: real_output/five_fold_raw/mixed_manual_five_fold_raw.tsv, real_output/delong/mixed_all_p_vals.tsv, real_output/five_fold_raw/mixed_prscs_five_fold_raw.tsv, real_output/delong/mixed_manual_delong_input.tsv, real_output/delong/mixed_prscs_delong_input.tsv, real_output/five_fold_final/mixed_prscs_five_fold_matrix.log, real_output/five_fold_final/mixed_manual_five_fold_matrix.log
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+[Mon Apr  7 15:27:48 2025]
+Finished jobid: 0 (Rule: all)
+6 of 6 steps (100%) done
+Complete log(s): /Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/.snakemake/log/2025-04-07T152048.461537.snakemake.log

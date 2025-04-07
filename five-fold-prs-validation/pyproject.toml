@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "five-fold"
+version = "0.1.0"
+description = ""
+authors = ["sam-white04 <white.samantha@outlook.com>"]
+readme = "README.md"
+packages = [{include = "five_fold"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+snakemake = "^9.1.6"
+defopt = "^6.4.0"
+polars = "^1.26.0"
+numpy = "^2.2.4"
+pandas = "^2.2.3"
+scikit-learn = "^1.6.1"
+pyarrow = "^19.0.1"
+black = "^25.1.0"
+isort = "^6.0.1"
+pylint = "^3.3.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

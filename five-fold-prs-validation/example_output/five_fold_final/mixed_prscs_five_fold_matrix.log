@@ -1,0 +1,35 @@
+/Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/modules/format_five_fold.py:42: DeprecationWarning: The argument `columns` for `DataFrame.pivot` is deprecated. It has been renamed to `on`.
+  pivot_df = tmp.pivot(values="value", index="prs", columns="predicting")
+shape: (120, 5)
+┌────────────────────────┬───────────────────────┬───────────────────┬──────────┬─────────────┐
+│ prs                    ┆ predicting            ┆ covariates        ┆ mean_auc ┆ mean_auc_se │
+│ ---                    ┆ ---                   ┆ ---               ┆ ---      ┆ ---         │
+│ str                    ┆ str                   ┆ str               ┆ f64      ┆ f64         │
+╞════════════════════════╪═══════════════════════╪═══════════════════╪══════════╪═════════════╡
+│ thyroid_cancer_GBMI_II ┆ thyroid_cancer        ┆ gt_pc             ┆ 0.423485 ┆ 0.141834    │
+│ thyroid_cancer_GBMI_II ┆ thyroid_cancer        ┆ gt_pc_age_sex     ┆ 0.376136 ┆ 0.090304    │
+│ thyroid_cancer_GBMI_II ┆ thyroid_cancer        ┆ gt_pc_age_sex_prs ┆ 0.416667 ┆ 0.089003    │
+│ thyroid_cancer_GBMI_II ┆ thyroid_cancer        ┆ gt_pc_prs         ┆ 0.468939 ┆ 0.102767    │
+│ thyroid_cancer_GBMI_II ┆ thyroid_cancer        ┆ age_sex_only      ┆ 0.488636 ┆ 0.135461    │
+│ …                      ┆ …                     ┆ …                 ┆ …        ┆ …           │
+│ hypothyroidism         ┆ benign_nodular_goiter ┆ gt_pc_age_sex     ┆ 0.49359  ┆ 0.082391    │
+│ hypothyroidism         ┆ benign_nodular_goiter ┆ gt_pc_age_sex_prs ┆ 0.506603 ┆ 0.091306    │
+│ hypothyroidism         ┆ benign_nodular_goiter ┆ gt_pc_prs         ┆ 0.515897 ┆ 0.103343    │
+│ hypothyroidism         ┆ benign_nodular_goiter ┆ age_sex_only      ┆ 0.490385 ┆ 0.120023    │
+│ hypothyroidism         ┆ benign_nodular_goiter ┆ prs_only          ┆ 0.605256 ┆ 0.04286     │
+└────────────────────────┴───────────────────────┴───────────────────┴──────────┴─────────────┘
+Traceback (most recent call last):
+  File "/Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/modules/format_five_fold.py", line 47, in <module>
+    defopt.run(format_five_fold)
+  File "/Users/whitesa3/anaconda3/envs/five_fold/lib/python3.11/site-packages/defopt.py", line 356, in run
+    return call()
+           ^^^^^^
+  File "/Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/modules/format_five_fold.py", line 42, in format_five_fold
+    pivot_df = tmp.pivot(values="value", index="prs", columns="predicting")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/whitesa3/anaconda3/envs/five_fold/lib/python3.11/site-packages/polars/_utils/deprecation.py", line 119, in wrapper
+    return function(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/whitesa3/anaconda3/envs/five_fold/lib/python3.11/site-packages/polars/dataframe/frame.py", line 8954, in pivot
+    self._df.pivot_expr(
+polars.exceptions.ComputeError: found multiple elements in the same group, please specify an aggregation function

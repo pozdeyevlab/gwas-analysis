@@ -1,0 +1,22 @@
+"method_1"	"method_2"	"predicting"	"delong"
+"manual_thyroid_cancer_GBMI_II_prs (0.6447)"	"prscs_thyroid_cancer_GBMI_II_prs (0.6386)"	"thyroid_cancer"	0.953060318776007
+"manual_thyroid_cancer_GBMI_II_prs (0.4377)"	"prscs_thyroid_cancer_GBMI_II_prs (0.6197)"	"tc_vs_bng"	0.0929082827987875
+"manual_thyroid_cancer_GBMI_II_prs (0.4785)"	"prscs_thyroid_cancer_GBMI_II_prs (0.5691)"	"benign_nodular_goiter"	0.456310854165697
+"manual_thyroid_cancer_GBMI_I_prs (0.5579)"	"prscs_thyroid_cancer_GBMI_I_prs (0.514)"	"thyroid_cancer"	0.691414659439042
+"manual_thyroid_cancer_GBMI_I_prs (0.6762)"	"prscs_thyroid_cancer_GBMI_I_prs (0.4435)"	"tc_vs_bng"	0.036311319721121
+"manual_thyroid_cancer_GBMI_I_prs (0.5355)"	"prscs_thyroid_cancer_GBMI_I_prs (0.4731)"	"benign_nodular_goiter"	0.573012918170017
+"manual_tc_vs_bng_custom_prs (0.5026)"	"prscs_tc_vs_bng_custom_prs (0.4614)"	"thyroid_cancer"	0.675436557369255
+"manual_tc_vs_bng_custom_prs (0.5077)"	"prscs_tc_vs_bng_custom_prs (0.6801)"	"tc_vs_bng"	0.160769656054954
+"manual_tc_vs_bng_custom_prs (0.509)"	"prscs_tc_vs_bng_custom_prs (0.5332)"	"benign_nodular_goiter"	0.830953435578723
+"manual_benign_nodular_goiter_prs (0.5588)"	"prscs_benign_nodular_goiter_prs (0.6614)"	"thyroid_cancer"	0.291081270131415
+"manual_benign_nodular_goiter_prs (0.5297)"	"prscs_benign_nodular_goiter_prs (0.6092)"	"tc_vs_bng"	0.471691641887594
+"manual_benign_nodular_goiter_prs (0.612)"	"prscs_benign_nodular_goiter_prs (0.4895)"	"benign_nodular_goiter"	0.239553677493818
+"manual_hypothyroidism_prs (0.514)"	"prscs_hypothyroidism_prs (0.4719)"	"thyroid_cancer"	0.713453436968131
+"manual_hypothyroidism_prs (0.4789)"	"prscs_hypothyroidism_prs (0.5757)"	"tc_vs_bng"	0.33471259225986
+"manual_hypothyroidism_prs (0.5144)"	"prscs_hypothyroidism_prs (0.605)"	"benign_nodular_goiter"	0.359085898060602
+"prscs_thyroid_cancer_GBMI_I_prs (0.514)"	"prscs_thyroid_cancer_GBMI_II_prs (0.6386)"	"thyroid_cancer"	0.240013526251291
+"prscs_thyroid_cancer_GBMI_I_prs (0.4435)"	"prscs_thyroid_cancer_GBMI_II_prs (0.6197)"	"tc_vs_bng"	0.154295400082915
+"prscs_thyroid_cancer_GBMI_I_prs (0.4731)"	"prscs_thyroid_cancer_GBMI_II_prs (0.5691)"	"benign_nodular_goiter"	0.369339867553718
+"manual_thyroid_cancer_GBMI_I_prs (0.5579)"	"manual_thyroid_cancer_GBMI_II_prs (0.6447)"	"thyroid_cancer"	0.353244900282956
+"manual_thyroid_cancer_GBMI_I_prs (0.6762)"	"manual_thyroid_cancer_GBMI_II_prs (0.4377)"	"tc_vs_bng"	0.0162371243545042
+"manual_thyroid_cancer_GBMI_I_prs (0.5355)"	"manual_thyroid_cancer_GBMI_II_prs (0.4785)"	"benign_nodular_goiter"	0.559236237149289

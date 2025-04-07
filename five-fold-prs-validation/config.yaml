@@ -1,0 +1,23 @@
+prscs_weights_dict: 
+  thyroid_cancer_GBMI_II: 'example_inputs/prscs/thyroid_cancer_GBMI_II.tsv'
+  thyroid_cancer_GBMI_I: 'example_inputs/prscs/thyroid_cancer_GBMI_I.tsv'
+  tc_vs_bng_custom: 'example_inputs/prscs/tc_vs_bng.tsv'
+  benign_nodular_goiter: 'example_inputs/prscs/benign_nodular_goiter.tsv'
+  hypothyroidism: 'example_inputs/prscs/hypothyroidism.tsv'
+
+manual_weights_dict: 
+  thyroid_cancer_GBMI_II: 'example_inputs/manual/thyroid_cancer_GBMI_II.tsv'
+  thyroid_cancer_GBMI_I: 'example_inputs/manual/thyroid_cancer_GBMI_I.tsv'
+  tc_vs_bng_custom: 'example_inputs/manual/tc_vs_bng.tsv'
+  benign_nodular_goiter: 'example_inputs/manual/benign_nodular_goiter.tsv'
+  hypothyroidism: 'example_inputs/manual/hypothyroidism.tsv'
+
+pheno_dict: 
+  thyroid_cancer: 'example_inputs/pheno/thyroid_cancer.tsv'
+  tc_vs_bng_path: 'example_inputs/pheno/tc_vs_bng.tsv'
+  benign_nodular_goiter: 'example_inputs/pheno/benign_nodular_goiter.tsv'
+  hypothyroidism: 'example_inputs/pheno/benign_nodular_goiter.tsv'
+
+covar_file: 'example_inputs/covar.tsv'
+output_dir: 'example_output'
+ancestry: 'mixed'

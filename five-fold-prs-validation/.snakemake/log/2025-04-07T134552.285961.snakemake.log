@@ -1,0 +1,46 @@
+Assuming unrestricted shared filesystem usage.
+None
+host: ENDO-M-027L7J4
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Conda environments: ignored
+Job stats:
+job       count
+------  -------
+all           1
+delong        1
+total         2
+
+Select jobs to execute...
+Execute 1 jobs...
+[Mon Apr  7 13:45:52 2025]
+localrule delong:
+    input: example_output/delong/mixed_manual_delong_input.tsv, example_output/delong/mixed_prscs_delong_input.tsv
+    output: example_output/delong/mixed_all_p_vals.tsv
+    jobid: 5
+    reason: Missing output files: example_output/delong/mixed_all_p_vals.tsv
+    wildcards: output_dir=example_output, phenotype=mixed
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+Waiting for more resources.
+Waiting at most 5 seconds for missing files:
+example_output/delong/mixed_all_p_vals.tsv (missing locally)
+MissingOutputException in rule delong in file "/Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/Snakefile", line 155:
+Job 5  completed successfully, but some output files are missing. Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+example_output/delong/mixed_all_p_vals.tsv (missing locally, parent dir contents: mixed_prscs_delong_input.tsv, mixed_manual_delong_input.tsv)
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look below for error messages
+[Mon Apr  7 13:45:58 2025]
+Error in rule delong:
+    message: None
+    jobid: 5
+    input: example_output/delong/mixed_manual_delong_input.tsv, example_output/delong/mixed_prscs_delong_input.tsv
+    output: example_output/delong/mixed_all_p_vals.tsv
+    shell:
+        Rscript run_delong.R --manual example_output/delong/mixed_manual_delong_input.tsv --prscs example_output/delong/mixed_prscs_delong_input.tsv --output example_output/delong/mixed_all_p_vals.tsv
+        (command exited with non-zero exit code)
+Complete log(s): /Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/.snakemake/log/2025-04-07T134552.285961.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.

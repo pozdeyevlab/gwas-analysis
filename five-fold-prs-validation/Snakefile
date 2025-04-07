@@ -1,0 +1,171 @@
+"""
+This meta analysis pipeline is set up as such:
+"""
+
+import datetime
+import fnmatch
+import re
+import os
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Union
+
+import attr
+
+################################################################################
+# Set Up & Data Structure
+################################################################################
+# Grab the location of various things from the config
+# Input Files/Directories
+prscs_weights_dict: Path = dict(config['prscs_weights_dict'])
+manual_weights_dict: Path = dict(config['manual_weights_dict'])
+pheno_dict: Path = dict(config['pheno_dict'])
+covar_file: Path = Path(config['covar_file'])
+output_dir: Path = Path(config["output_dir"])
+ancestry: str = config["ancestry"]
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Input:
+    """Represents all necessary meta data for each biobank gwas"""
+
+    input_files: List[str]
+    weight_phenotypes: List[str]
+    pheno_files: List[str]
+    pheno_phenotypes: List[str]
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Delong:
+    """Represents all necessary meta data for each biobank gwas"""
+
+    manual: str
+    prscs: str
+
+
+inputs: Dict[str, List[Input]] = {}
+delongs: Dict[str, List[Delong]] = {}
+delongs[ancestry] = Delong(manual=f'{output_dir}/delong/{ancestry}_manual_delong_input.tsv', prscs = f'{output_dir}/delong/{ancestry}_prscs_delong_input.tsv')
+
+inputs[f'{ancestry}_prscs'] = Input(
+    input_files=list(prscs_weights_dict.values()),
+    weight_phenotypes=list(prscs_weights_dict.keys()),
+    pheno_files=list(pheno_dict.values()),
+    pheno_phenotypes=list(pheno_dict.keys())
+)
+
+inputs[f'{ancestry}_manual'] = Input(
+    input_files=list(manual_weights_dict.values()),
+    weight_phenotypes=list(manual_weights_dict.keys()),
+    pheno_files=list(pheno_dict.values()),
+    pheno_phenotypes=list(pheno_dict.keys())
+)
+
+
+print(inputs)
+################################################################################
+# Directives
+################################################################################
+onerror:
+    """Code that gets called  if / when the snakemake pipeline exits with an error.
+    The `log` variable contains a path to the snakemake log file which can be parsed
+    for more information. Summarizes information on failed jobs and writes it to the
+    output.
+    """
+    try:
+        path = Path(log)
+        RULE_PREFIX = "Error in rule "
+        LOG_PREFIX = "    log: "
+        CMD_PREFIX = "Command "
+
+        with path.open("r") as fh:
+            lines: Iterable[str] = fh.readlines()
+
+        while lines:
+            lines = list(dropwhile(lambda l: not l.startswith(RULE_PREFIX), lines))
+            if lines:
+                rule_name = lines[0].rstrip()[len(RULE_PREFIX) : -1]
+                lines = dropwhile(lambda l: not l.startswith(LOG_PREFIX), lines)
+                log_path = Path(next(lines).rstrip()[len(LOG_PREFIX) :].split()[0])
+
+                print(f"========== Start of Error Info for {rule_name} ==========")
+                print(f"Failed rule: {rule_name}")
+                print(f"Contents of log file: {log_path}")
+                with log_path.open("r") as fh:
+                    for line in fh.readlines():
+                        print(f"    {line.rstrip()}")
+                print(f"=========== End of Error Info for {rule_name} ===========")
+    except Exception as ex:
+        print("################################################")
+        print("Exception raised in snakemake onerror handler.")
+        print(str(ex))
+        print("################################################")
+
+
+################################################################################
+# Beginning of rule declarations
+################################################################################
+rule all:
+    """
+    Default rule that is executed when snakemake runs.  The 'inputs' here list the set of files
+    that the pipeline will generate by default if a specific list isn't provided.
+    """
+    input:
+        [f'{output_dir}/five_fold_raw/{phenotype}_five_fold_raw.tsv' for phenotype in inputs],
+        [f'{output_dir}/delong/{phenotype}_delong_input.tsv' for phenotype in inputs],
+        [f'{output_dir}/five_fold_final/{phenotype}_five_fold_matrix.log' for phenotype in inputs],
+        [f'{output_dir}/delong/{phenotype}_all_p_vals.tsv' for phenotype in delongs],
+
+rule five_fold:
+    params:
+        prs_files = lambda wc: inputs[wc.phenotype].input_files,
+        prs_names = lambda wc: inputs[wc.phenotype].weight_phenotypes,
+        pheno_files = lambda wc: inputs[wc.phenotype].pheno_files,
+        pheno_names = lambda wc: inputs[wc.phenotype].pheno_phenotypes,
+        covar = covar_file,
+        ancestry = ancestry
+    output:
+        five_fold = '{output_dir}/five_fold_raw/{phenotype}_five_fold_raw.tsv',
+        delong = '{output_dir}/delong/{phenotype}_delong_input.tsv'
+    log:
+        "{output_dir}/five_fold_raw/{phenotype}_five_fold_raw.log"
+    shell:
+        "Python modules/five_fold.py "
+        "--prs-files {params.prs_files} "
+        "--prs-names {params.prs_names} "
+        "--pheno-names {params.pheno_names} "
+        "--pheno-files {params.pheno_files} "
+        "--covar-file {params.covar} "
+        "-a {params.ancestry} "
+        "--delong-out {output.delong} "
+        "--output {output.five_fold} &> {log}"
+
+
+rule format_matrix:
+    input:
+        raw_five_fold = '{output_dir}/five_fold_raw/{phenotype}_five_fold_raw.tsv'
+    params:
+        prefix = '{output_dir}/five_fold_final/{phenotype}'
+        
+    log:
+        '{output_dir}/five_fold_final/{phenotype}_five_fold_matrix.log'
+    shell:
+        "python  modules/format_five_fold.py "
+        "--input-file {input.raw_five_fold} "
+        "--output {params.prefix} &> {log}"
+
+rule delong:
+    input:
+        manual = lambda wc: delongs[wc.phenotype].manual,
+        prscs = lambda wc: delongs[wc.phenotype].prscs
+    output:
+        '{output_dir}/delong/{phenotype}_all_p_vals.tsv'
+    log:
+        '{output_dir}/delong/{phenotype}_all_p_vals.log'
+    conda:
+        'r_environment.yml'
+    shell:
+        "Rscript run_delong.R "
+        "--manual {input.manual} "
+        "--prscs {input.prscs} "
+        "--output {output} &> {log}"
+
+

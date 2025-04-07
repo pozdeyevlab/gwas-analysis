@@ -1,0 +1,20 @@
+Assuming unrestricted shared filesystem usage.
+None
+host: ENDO-M-027L7J4
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Conda environments: ignored
+Job stats:
+job       count
+------  -------
+all           1
+delong        1
+total         2
+
+Select jobs to execute...
+Execute 1 jobs...
+RuleException in rule delong in file "/Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/Snakefile", line 155:
+AttributeError: 'dict' object has no attribute 'manual', when formatting the following:
+Rscript run_delong.R --manual {inputs.manual} --prscs {inputs.prscs} --output {output}

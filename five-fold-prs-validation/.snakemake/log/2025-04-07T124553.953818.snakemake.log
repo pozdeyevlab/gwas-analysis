@@ -1,0 +1,9 @@
+Assuming unrestricted shared filesystem usage.
+None
+host: ENDO-M-027L7J4
+Building DAG of jobs...
+MissingInputException in rule all in file "/Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/Snakefile", line 96:
+Missing input files for rule all:
+    affected files:
+        example_output/five_fold_finalmixed_manual_five_fold_matrix.log
+        example_output/five_fold_finalmixed_prscs_five_fold_matrix.log

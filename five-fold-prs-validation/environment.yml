@@ -1,0 +1,7 @@
+name: five_fold
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - poetry=1.5.1
+  - python=3.11
