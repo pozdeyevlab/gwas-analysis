@@ -1,0 +1,4 @@
+out_dir: "example_outputs/"
+map_file: "example_inputs/map.tsv"
+rsid_map: "~/rsid_map.tsv"
+validation_bim_prefix: "~/example_validation_bim"

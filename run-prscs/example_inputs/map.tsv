@@ -1,0 +1,2 @@
+phenotype	input_file	ld_ref	n_gwas
+thyroid_cancer	thyroid_cancer_1.tbl	ldblk_1kg_eur	50000
