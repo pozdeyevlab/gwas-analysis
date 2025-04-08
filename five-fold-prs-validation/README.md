@@ -14,6 +14,10 @@ Based on the phenotype dictionary and the provided weights dictionary in the con
 *Randomly generated example data is provided in example_inputs. Please use this data to format your own inputs*
 
 ## Outputs
+1) {output_dir}/delong/*.tsv
+    Tsv's with all possible combinations of weigth file and prediction with their p-values
+2) {output_dir}/five_fold_final/*.tsv
+    Matrix formatted output for AUC's where the x-axis is the weight file and the y-axis is the predicted phenotype 
 
 ## Environment Build & Running the Workflow
 ```{bash}

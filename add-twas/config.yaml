@@ -1,0 +1,10 @@
+inputs:
+  thyroid_cancer:
+    gwas: '~/TWAS/summary/leave_none_out_thyroid_cancer.tsv'
+    fusion_mixed: '~/TWAS/fusion/thyroid_cancer_mixed_with_gene_names.dat'
+    fusion_eur: '~/TWAS/fusion/thyroid_cancer_EUR_with_gene_names.dat'
+    predixscan_mixed: '~/TWAS/results/twas/spredixcan/thyroid_cancer_mf_mixed/thyroid_cancer_mf_mixed-gtex_v8-mashr-Thyroid.csv'
+    predixscan_eur: '~/TWAS/results/twas/spredixcan/thyroid_cancer_mf_eur/thyroid_cancer_mf_eur-gtex_v8-mashr-Thyroid.csv'
+
+output_dir: "example_outputs"
+gtf_file : "~/TWAS/Homo_sapiens.GRCh38.113.gtf"

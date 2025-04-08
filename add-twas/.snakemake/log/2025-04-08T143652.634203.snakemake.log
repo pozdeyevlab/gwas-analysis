@@ -1,0 +1,39 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job                 count
+----------------  -------
+all                     1
+clean_predixscan        1
+total                   2
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Apr  8 14:36:52 2025]
+localrule clean_predixscan:
+    input: /Users/whitesa3/Projects/TWAS/summary/leave_none_out_thyroid_cancer.tsv, /Users/whitesa3/Projects/TWAS/Homo_sapiens.GRCh38.113.gtf
+    output: example_outputs/combined_results/thyroid_cancer.tsv
+    log: example_outputs/combined_results/thyroid_cancer.log
+    jobid: 1
+    reason: Missing output files: example_outputs/combined_results/thyroid_cancer.tsv
+    wildcards: output_dir=example_outputs, key=thyroid_cancer
+    resources: tmpdir=/var/folders/6n/qsyvjjbx6394xfkzt4c8krsm0000gp/T
+
+[Tue Apr  8 14:38:36 2025]
+Error in rule clean_predixscan:
+    jobid: 1
+    input: /Users/whitesa3/Projects/TWAS/summary/leave_none_out_thyroid_cancer.tsv, /Users/whitesa3/Projects/TWAS/Homo_sapiens.GRCh38.113.gtf
+    output: example_outputs/combined_results/thyroid_cancer.tsv
+    log: example_outputs/combined_results/thyroid_cancer.log (check log file(s) for error details)
+    shell:
+        python modules/main.py --gwas /Users/whitesa3/Projects/TWAS/summary/leave_none_out_thyroid_cancer.tsv --ancestries mixed eur --fusions /Users/whitesa3/Projects/TWAS/fusion/thyroid_cancer_mixed_with_gene_names.dat /Users/whitesa3/Projects/TWAS/fusion/thyroid_cancer_EUR_with_gene_names.dat --gtf /Users/whitesa3/Projects/TWAS/Homo_sapiens.GRCh38.113.gtf --predixscans /Users/whitesa3/Projects/TWAS/results/twas/spredixcan/thyroid_cancer_mf_mixed/thyroid_cancer_mf_mixed-gtex_v8-mashr-Thyroid.csv /Users/whitesa3/Projects/TWAS/results/twas/spredixcan/thyroid_cancer_mf_eur/thyroid_cancer_mf_eur-gtex_v8-mashr-Thyroid.csv --output example_outputs/combined_results/thyroid_cancer.tsv
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake/log/2025-04-08T143652.634203.snakemake.log
+WorkflowError:
+At least one job did not complete successfully.
