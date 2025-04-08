@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "add-twas"
+version = "0.1.0"
+description = ""
+authors = ["sam-white04 <white.samantha@outlook.com>"]
+readme = "README.md"
+packages = [{include = "add_twas"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+snakemake = "^9.1.9"
+polars = "^1.26.0"
+pandas = "^2.2.3"
+pyranges = "^0.1.4"
+defopt = "^6.4.0"
+pyarrow = "^19.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
