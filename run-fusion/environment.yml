@@ -1,4 +1,4 @@
-name: metal
+name: fusion
 channels:
   - bioconda
   - conda-forge

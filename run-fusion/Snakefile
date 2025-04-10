@@ -1,0 +1,155 @@
+import datetime
+import fnmatch
+import re
+import os
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Union
+
+import attr
+import pandas as pd
+
+################################################################################
+# Set Up & Data Structure
+################################################################################
+# Grab the location of various things from the config
+# Input Files/Directories
+input_dir: Path = Path(config["input_dir"])
+output_dir: Path = Path(config["output_dir"])
+gtf: Path = Path(config["gtf"])
+input_suffix: str = config["input_suffix"]
+gtex_file: Path = Path(config['gtex_file'])
+gtex_weight_dir: Path = Path(config['gtex_weight_dir'])
+ref_ld_chr: str = config['ref_ld_chr']
+ancestry: str = config['ancestry']
+fusion_script: Path = Path(config['fusion_script'])
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Input:
+    """Represents all necessary inputs"""
+    input_file: str
+    chrom: str
+
+@attr.s(frozen=True, auto_attribs=True, kw_only=True)
+class Combined:
+    """Combine per chromosome results"""
+    fusion_results: List[str]
+    prefix: str
+
+def _find_tsv_files(directory):
+    # Grab all files that end in *aligned_results.tsv
+    tsv_files = []
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if fnmatch.fnmatch(file, f"*{input_suffix}"):
+                tsv_files.append(os.path.join(root, file))
+    return tsv_files
+
+
+inputs: Dict[str, List[Input]] = {}
+combine: Dict[str, List[Combined]] = {}
+
+# Get list of files ending in "aligned_results.tsv' from input directory
+file_list: List[str] = _find_tsv_files(input_dir)
+
+# Get name of file minus the suffix
+for file in file_list:
+    name = file.name.split(input_suffix)[0].strip('_')
+    for i in list(range(1,23)):
+        inputs[f'{name}_{ancestry}_{chrom}'] = Input(input_file=file, chrom = i)
+
+# Combine the results from fusion
+names = list(set(['_'.join(f.split('_')[:-1]) for f in inputs]))
+for n in names:
+    combine[n] = Combined(fusion_results = [f'{output_dir}/fusion_results/{n}_{i}.dat' for i in list(range(1,23))], prefix = f'{output_dir}/fusion_results/{n}_')    
+
+print(combine)
+print(inputs)
+################################################################################
+# Directives
+################################################################################
+onerror:
+    """Code that gets called  if / when the snakemake pipeline exits with an error.
+    The `log` variable contains a path to the snakemake log file which can be parsed
+    for more information. Summarizes information on failed jobs and writes it to the
+    output.
+    """
+    try:
+        path = Path(log)
+        RULE_PREFIX = "Error in rule "
+        LOG_PREFIX = "    log: "
+        CMD_PREFIX = "Command "
+
+        with path.open("r") as fh:
+            lines: Iterable[str] = fh.readlines()
+
+        while lines:
+            lines = list(dropwhile(lambda l: not l.startswith(RULE_PREFIX), lines))
+            if lines:
+                rule_name = lines[0].rstrip()[len(RULE_PREFIX) : -1]
+                lines = dropwhile(lambda l: not l.startswith(LOG_PREFIX), lines)
+                log_path = Path(next(lines).rstrip()[len(LOG_PREFIX) :].split()[0])
+
+                print(f"========== Start of Error Info for {rule_name} ==========")
+                print(f"Failed rule: {rule_name}")
+                print(f"Contents of log file: {log_path}")
+                with log_path.open("r") as fh:
+                    for line in fh.readlines():
+                        print(f"    {line.rstrip()}")
+                print(f"=========== End of Error Info for {rule_name} ===========")
+    except Exception as ex:
+        print("################################################")
+        print("Exception raised in snakemake onerror handler.")
+        print(str(ex))
+        print("################################################")
+
+
+################################################################################
+# Beginning of rule declarations
+################################################################################
+rule all:
+    """
+    Default rule that is executed when snakemake runs.  The 'inputs' here list the set of files
+    that the pipeline will generate by default if a specific list isn't provided.
+    """
+    input:
+        [f'{output_dir}/fusion_results/{key}.dat' for key, value in inputs.items()],
+        [f'{output_dir}/final_results/{key}_fusion_results_with_genes.tsv' for key, value in combine.items()]
+
+rule run_fusion:
+    params:
+        chrom = lambda wc: inputs[wc.key].chrom,
+        ref_ld_chr = ref_ld_chr,
+
+    input:
+        input_file = lambda wc: inputs[wc.key].input_file,
+        gtex_file = gtex_file,
+        gtex_weight_dir = gtex_weight_dir,
+        fusion = fusion_script
+
+    output:
+        '{output_dir}/fusion_results/{key}.tsv'
+    log:
+        '{output_dir}/fusion_results/{key}.log'
+    shell:
+        "Rscript {input.fusion} "
+            "--sumstats {input.input_file} "
+            "--weights {input.gtex_file} "
+            "--weights_dir {input.gtex_weight_dir} "
+            "--ref_ld_chr {params.ref_ld_chr} "
+            "--chr {params.chrom} "
+            "--out {output} &> {log}"
+
+rule merge_and_add_names:
+    input:
+        fusion_results = lambda wc: expand(f"c{combine[wc.key].prefix}_{n}.dat", n=range(1, 23)),
+        gtf = gtf
+    output:
+        '{output_dir}/final_results/{key}_fusion_results_with_genes.tsv'
+    log:
+        '{output_dir}/final_results/{key}_fusion_results_with_genes.log'
+    shell:
+        "python modules/merge_fusion_and_add_names.py "
+        "--input-file {input.fusion_results} "
+        "--gtf {input.gtf} "
+        "--output-file {output} &> {log}"

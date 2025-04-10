@@ -8,6 +8,10 @@ cd gwas-analysis/run-metal
 conda env create -f environment.yml
 conda activate metal
 poetry install
+
+# After setting up dependencies and formatting config file
+snakemake --cores 1 --configfile config.yaml --dry-run
+snakemake --cores 1 --configfile config.yaml
 ```
 
 ## What is done in this pipeline?
