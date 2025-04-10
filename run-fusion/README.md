@@ -7,7 +7,7 @@ We ran [FUSION](http://gusevlab.org/projects/fusion/) to better understand the g
 * Precomputed [GTEx model](https://s3.us-west-1.amazonaws.com/gtex.v8.fusion/ALL/GTExv8.ALL.Thyroid.tar.gz)
 * [FUSION software](http://gusevlab.org/projects/fusion/#installation)
 * Homo_sapiend.GRCh38.113.gtf file downloaded from [ensembl - here](https://ftp.ensembl.org/pub/current_gtf/homo_sapiens/)
-* 
+* EUR 1K Genomes LD Reference Pannel
 
 
 ## Environment Build & Running the Workflow

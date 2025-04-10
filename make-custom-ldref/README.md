@@ -8,11 +8,9 @@ The input data required for this process is not publicly available and researche
 2) Summix2 predictions for your cohort of interest. These can be collected using [run-summix](https://github.com/pozdeyevlab/gwas-analysis/tree/main/run-summix). These will need to be manually written into `modules/dsub_subset_and_map_bgens.py`.
 3) Whole genome bgens and sample files. We used the outputs from [vds-filter](https://github.com/pozdeyevlab/gwas-analysis/tree/main/vds-filter)
 
-## Ouptus
-
 ## Running the Code
-Step 1 = extracts 5000 random genomes with population structure from Summix
+Step 1 = dsub_subset_and_map_bgens.ipynb extracts 5000 random genomes with population structure from Summix
 Step 2 = PCA_for_LDSC.ipynb  performs QC of the 5000 genomes and calculated principal components
-Step 3 = Finally, dsub_cov_ldsc_nikita.ipynb calculates covariate-adjusted LD scores
+Step 3 = dsub_cov_ldsc.ipynb calculates covariate-adjusted LD scores
 
 
