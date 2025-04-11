@@ -1,3 +1,4 @@
 .DS_Store
 prsice2-prs
 */.snakemake/
+combine_leads/example_inputs/*

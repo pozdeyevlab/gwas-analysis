@@ -1,7 +1,0 @@
-Assuming unrestricted shared filesystem usage.
-None
-host: ENDO-M-027L7J4
-Building DAG of jobs...
-WildcardError in rule format_matrix in file "/Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/Snakefile", line 132:
-Wildcards in params cannot be determined from output files. Note that you have to use a function to deactivate automatic wildcard expansion in params strings, e.g., `lambda wildcards: '{test}'`. Also see https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#non-file-parameters-for-rules: (rule format_matrix, line 158, /Users/whitesa3/Desktop/gwas-analysis/five-fold-prs-validation/Snakefile)
-'ancestry'
