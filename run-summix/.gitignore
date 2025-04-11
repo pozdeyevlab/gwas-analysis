@@ -1,4 +1,4 @@
-example_inptus/
+example_inputs/
 run_summix/
 .snakemake/
 .DS_Store
