@@ -1,4 +1,4 @@
-# Helper workflow to run ldsc (linkage score disequilibrium on all aligned gwas summary stats)
+# Helper workflow to run LDSC (linkage score disequilibrium on all aligned gwas summary stats)
 
 ## Required inputs
 This is intended to be run on all aligned gwas summary stats produced by gwasqc. The required inputs are as follows:

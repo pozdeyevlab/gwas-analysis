@@ -11,7 +11,6 @@ Each input will generate a TSV file with the SUMMIX2 ancestry predictions.
 ## Environment Build & Running the Workflow
 The commands below will build the required environment, activate it, and create the DAG. If the DAG is not output to the console check that all paths are correct in `config.yaml`. 
 
-This repository comes with test data, use this an example for your own input data. 
 ```bash
 conda env create -f environment.yml
 conda activate snkmk_summix

@@ -1,3 +1,4 @@
+.pylintrc
 modules/__pycache__/*
 gwas-qc/
 example_output

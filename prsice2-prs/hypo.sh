@@ -1,1 +1,0 @@
-Rscript PRSice.R --prsice ./PRSice_linux --out output_dir/phenotype --base phenotype.assoc --target test_data/merge --binary-target T --thread 20 --stat beta --snp STUDY_ID --chr CHR --bp POS --A2 ref_from_id --A1 alt_from_id --pvalue P-value --ignore-fid  --pheno phenotype.pheno 
