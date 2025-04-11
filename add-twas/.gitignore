@@ -1,4 +1,4 @@
-read_config.yaml
+real_config.yaml
 example_outputs
 add_twas
 .snakemake/

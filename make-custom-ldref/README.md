@@ -10,7 +10,9 @@ The input data required for this process is not publicly available and researche
 
 ## Running the Code
 Step 1 = dsub_subset_and_map_bgens.ipynb extracts 5000 random genomes with population structure from Summix
+
 Step 2 = PCA_for_LDSC.ipynb  performs QC of the 5000 genomes and calculated principal components
+
 Step 3 = dsub_cov_ldsc.ipynb calculates covariate-adjusted LD scores
 
 
