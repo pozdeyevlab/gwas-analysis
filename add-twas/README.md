@@ -3,8 +3,8 @@ After [combining lead variants](https://github.com/pozdeyevlab/gwas-analysis/tre
 
 ## Required Inputs
 * Final outputs from [combining lead variants](https://github.com/pozdeyevlab/gwas-analysis/tree/main/combine-leads) 
-* Ancestry stratified [FUSION](TODO ADD FUSION REPO) results
-* Ancestry stratified [PrediXScan](TODO ADD Fusion Repo) results
+* Ancestry stratified [FUSION results](https://github.com/pozdeyevlab/gwas-analysis/tree/main/run-fusion)
+* Ancestry stratified [PrediXScan](https://github.com/hakyimlab/PrediXcan) results
 * Homo_sapiend.GRCh38.113.gtf file downloaded from [ensembl - here](https://ftp.ensembl.org/pub/current_gtf/homo_sapiens/)
 
 **There is no example data, there is no map file required, only a lead variant file, a FUSION file, and a PrediXscan file for each phenotype. Add or remove pheotypes by adding to the nested dictionary in the config. Every key in the inputs dictionary will become an output file. It is expacted that there is at least one FUSION or PrediXscan file. Please name as `fusion_ancestry` or `predixscan_ancestry`**
