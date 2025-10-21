@@ -1,6 +1,9 @@
 # Inverse Variance Weighted Meta-Analysis & Downstream Processing
 This pipeline is specifically designed to be used in conjunction with the [gwasqc](https://github.com/pozdeyevlab/gwasqc) pipeline. If you wish to use this workflow with your own summary stats, please ensure that your input summary stats have the required columns, discussed _Required USER Provided Input Files_. 
 
+## Disjointed Methods
+Nature reviewers requested that we update our methods to nominate lead variants using a linkage disequilibrium aware method, we happily complied, however this created a disgrepency in this pipeline. Originally lead variants were nominated using a distance based method [modules/significant_loci_old.py](https://github.com/pozdeyevlab/gwas-analysis/blob/main/run-metal/modules/significant_loci_old.py). The updated methods can be replicated using METAL output as input for [ld-clumping](https://github.com/pozdeyevlab/gwas-analysis/tree/main/ld-clumping). This creates an issue in that [run-metal](https://github.com/pozdeyevlab/gwas-analysis/tree/main/run-metal) needs to be run in two parts. First, please use [Snakefile_Part_I](), then run [Snakefile_Part_II](). The config files for these can be the same except that you will use dummy values for the 'ld_loci_dict' when running part I. 
+
 ## Environment & Dependency Set Up 
 ```bash
 git clone https://github.com/pozdeyevlab/gwas-analysis.git
@@ -8,10 +11,18 @@ cd gwas-analysis/run-metal
 conda env create -f environment.yml
 conda activate metal
 poetry install
+```
 
-# After setting up dependencies and formatting config file
-snakemake --cores 1 --configfile config.yaml --dry-run
-snakemake --cores 1 --configfile config.yaml
+# After setting up dependencies and formatting config file run part I
+```bash
+snakemake --cores 1 --configfile config.yaml --dry-run --snakefile Snakefile_Part_I
+snakemake --cores 1 --configfile config.yaml --snakefile Snakefile_Part_I
+```
+
+## Run [ld-clumping](https://github.com/pozdeyevlab/gwas-analysis/tree/main/ld-clumping)
+```bash
+snakemake --cores 1 --configfile config.yaml --dry-run --snakefile Snakefile_Part_II
+snakemake --cores 1 --configfile config.yaml --snakefile Snakefile_Part_II
 ```
 
 ## What is done in this pipeline?
@@ -65,8 +76,9 @@ snakemake --cores 1 --configfile config.yaml
     * The munge & ldsc python (2) scripts are called directly in the Snakefile
         * LDSC is run for individual phenotypes and together to calculate the genetic correlation matrix
         * See instructions below on setting up LDSC & required references
-9) Caculates the most significant variant per non-overlapping genomic region: `modules/significnt_loci.py`
-    * Based on methods used in the GBMI flagship paper we developed an algorithm which identifies start and end coordinates surrounding the most significnat variant, which may be tagging the causal variant. This list of significant variants is then annotated with ANNOVAR and compared to a list of known variants. 
+9) Caculates the most significant variant per non-overlapping genomic region: `modules/significnt_loci.py` (after ld-clumping)
+    * (original methods forund in modules/significant_loci_old.py) Based on methods used in the GBMI flagship paper we developed an algorithm which identifies start and end coordinates surrounding the most significnat variant, which may be tagging the causal variant. This list of significant variants is then annotated with ANNOVAR and compared to a list of known variants. 
+    * Using the externally provided ld-clumped results files, independent and significant variants are compared to the GWAS catalog (as of 2024). 
 10) Run ANNOVAR to attach the nearest gene to list of significant variants: `modules/prep_for_annovar.py`
     * Significant variants are formatted for ANNOVAR and then annotation is called directly from the Snakefile
     * See below for instructions on installing ANNOVAR and required references

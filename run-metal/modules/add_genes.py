@@ -218,6 +218,7 @@ def add_genes(
         "SNP_GENE_IDS",
         "SNPS",
         "CATALOG_PVALUE",
+        "DISEASE/TRAIT"
     ]
 
     for col in columns:
@@ -259,6 +260,7 @@ def add_genes(
         "SNP_GENE_IDS",
         "SNPS",
         "CATALOG_PVALUE",
+        "DISEASE/TRAIT"
     ]
     for col in missing_cols:
         final_cols.append(col)
@@ -319,9 +321,11 @@ def _min_pval_biobanks(row, col_names) -> str:
     ).astype(float)
     pvals = pvals[np.logical_not(np.isnan(pvals))]
     # min_pval = "{:.3e}".format(min(pvals))
-    min_pval = min(pvals)
+    try:
+        min_pval = min(pvals)
+    except ValueError:
+        min_pval = None
     print(min_pval)
-
     return min_pval
 
 

@@ -32,14 +32,14 @@ def sig_loci(
     # PART ONE:
     # Find the +/- 500kb regions
     ################################################################################################
-    id_col = 'STUDY_ID'
-    p_value = 'P-value'
+    id_col = "STUDY_ID"
+    p_value = "P-value"
     # Read in all chromosomes for each biobank, phenptype, and sex
     df = _read_input(
         file=input_file,
         id_col=id_col,
     ).with_columns((pl.col("chr").str.replace_all("X", "23")).alias("chr"))
-    sig_data = df.filter((pl.col("P-value")) <= (significance_threshold))
+    sig_data = df.filter((pl.col("P-value").cast(float)) <= (significance_threshold))
     n_sig_variants = sig_data.shape[0]
     sig_data = cochrans.cochran_q(df=sig_data)
     sig_data = sig_data.with_columns(
@@ -121,10 +121,12 @@ def sig_loci(
     # Filter to retain most significant variant per region
     lowest_pval = final_data.group_by(
         ["chr", "start_region", "end_region"], maintain_order=True
-    ).agg(pl.col("P-value").min().cast(float))
+    ).agg(pl.col('P-value').min())
+    print(lowest_pval)
     final_data = lowest_pval.join(
         final_data, on=["chr", "start_region", "end_region", "P-value"]
-    )
+    ).unique(subset = ["chr", "start_region", "end_region", "P-value"], keep="first", maintain_order=True)
+
     ################################################################################################
     # PART TWO:
     # Look for variants in the catalog that are within the boundaries of the found regions
@@ -198,7 +200,7 @@ def sig_loci(
             .with_columns(
                 col,
                 annotated_catalog[col]
-                .map_elements(lambda x: _list_to_str(x))
+                .map_elements(lambda x: _list_to_str(x), skip_nulls=False)
                 .alias(f"second_{col}"),
             )
             .drop(col)
@@ -221,6 +223,7 @@ def sig_loci(
         .otherwise(pl.col("start_region"))
         .alias("start_region")
     )
+    #final_result = final_result.drop('P-value').rename({'str_pval':'P-value'})
     final_result.write_csv(output_path, separator="\t")
 
 
@@ -242,7 +245,7 @@ def _find_regions(
 ) -> pl.DataFrame:
     # Filter data frame for significant variants only & sort by chr and pos
     raw_df = (
-        raw_df.filter(pl.col(pval_col) < sig_threshold)
+        raw_df.filter(pl.col(pval_col).cast(float) < sig_threshold)
         .sort([chr_col, pos_col])
         .with_columns(pl.col(chr_col).cast(int).alias(chr_col))
         .with_columns(pl.col(pos_col).cast(int).alias(pos_col))
@@ -292,7 +295,7 @@ def _read_input(*, file: str, id_col: str) -> pl.DataFrame:
     For each file read in specific columns to avoid mem load
     """
     # Read & Format
-    raw_df = pl.read_csv(file, separator="\t")
+    raw_df = pl.read_csv(file, separator="\t", dtypes={'P-value':float}) #.with_columns(pl.col('P-value').cast(float).alias('float_pval')).rename({'P-value':'str_pval', 'float_pval':'P-value'})
 
     raw_df = raw_df.with_columns(
         pl.col(id_col).str.split(":").map_elements(lambda arr: arr[0]).alias("chr"),
@@ -310,8 +313,10 @@ def _read_input(*, file: str, id_col: str) -> pl.DataFrame:
         .map_elements(lambda arr: arr[3])
         .alias("alt_from_id"),
     )
+
     return raw_df
 
 
 if __name__ == "__main__":
     defopt.run(sig_loci)
+

@@ -18,12 +18,14 @@ import cochrans
 def sig_loci(
     *,
     input_file: str,
+    ld_file: str,
     output_path: Path,
     significance_threshold: float,
     phenotype_catalog_path: Path,
 ) -> pl.DataFrame:
     """
-    :param input_file: Input path to regenie or saige summary stats
+    :param ld_file: LD Clump file
+    :param input_file: Metal result
     :param significance_threshold: Desired significance_threshold for filtering significant variants
     :param output_path: Path to file to write unusable variants to
     :param phenotype_catalog_path Path to gwas catalog of published associated variants
@@ -33,52 +35,46 @@ def sig_loci(
     # Find the +/- 500kb regions
     ################################################################################################
     id_col = "STUDY_ID"
-    p_value = "P-value"
-    # Read in all chromosomes for each biobank, phenptype, and sex
+
     df = _read_input(
         file=input_file,
         id_col=id_col,
     ).with_columns((pl.col("chr").str.replace_all("X", "23")).alias("chr"))
     sig_data = df.filter((pl.col("P-value").cast(float)) <= (significance_threshold))
     n_sig_variants = sig_data.shape[0]
+
     sig_data = cochrans.cochran_q(df=sig_data)
     sig_data = sig_data.with_columns(
         (pl.col("cochran_q_p_value") < (1 / n_sig_variants)).alias(
             "cochran_heterogeneity"
         )
     )
+    # Read in all chromosomes for each biobank, phenptype, and sex
+    ld = pl.read_csv(ld_file, separator='\t', null_values=['.'], dtypes={'P':str}).rename({'#CHROM':'chr', 'POS':'pos'}).with_columns((pl.col("chr").str.replace_all("X", "23")).alias("chr")).with_columns(pl.col('ID').str.replace_all('_', ':').str.replace('chr', '').alias('ID'))
+    ld = ld.with_columns(pl.col('SP2').fill_null(pl.col('ID').str.replace_all(':', '_')).alias('SP2'))
+    
+    #ld = pl.read_csv(ld_file, separator='\t', dtypes={'P':str}).rename({'#CHROM':'chr', 'POS':'pos'}).with_columns((pl.col("chr").str.replace_all("X", "23")).alias("chr")).with_columns(pl.col('ID').str.replace_all('_', ':').str.replace('chr', '').alias('ID'))
+    ld = ld.with_columns(pl.col('SP2').str.split(',').alias('tmp'))
+    ld = ld.with_columns(pl.col('tmp').map_elements(lambda arr: int(min([item.split('_')[1] for item in arr]))).alias('start_region'))
 
-    chroms = set(list(sig_data["chr"]))
-
-    regions_dfs = []
-
-    for chrom in chroms:
-        regions_df = _find_regions(
-            sig_threshold=significance_threshold,
-            raw_df=sig_data.filter(chr=chrom),
-            pval_col=p_value,
-            pos_col="pos",
-            chr_col="chr",
-            id_col=id_col,
-            flank=1000000,
-        )
-        regions_dfs.append(regions_df)
-    merged_df = pl.concat(regions_dfs, how="vertical")
-
+    ld = ld.with_columns(pl.col('tmp').map_elements(lambda arr: int(max([item.split('_')[1] for item in arr]))).alias('end_region')).drop('tmp')
+    print(ld)
     # Read in catalog data
     catalog = pl.read_csv(
         phenotype_catalog_path,
         null_values=["NA", "NR"],
         separator="\t",
-    ).with_columns(
+        dtypes={'CHR_ID':str}
+    ).filter(pl.col('P-VALUE')<5e-8).with_columns(
         (pl.col("CHR_ID").str.replace_all("X", "23").cast(int)).alias("CHR_ID")
     )
 
     # Add known or potentially novel to final data
-    merged_chroms = set(merged_df["chr"])
+    merged_chroms = set(ld["chr"])
     merged_dfs = []
     for chr in merged_chroms:
-        df = merged_df.filter(pl.col("chr").cast(int) == int(chr))
+        df = ld.filter(pl.col("chr").cast(int) == int(chr))
+
         chr_catalog = catalog.filter(pl.col("CHR_ID") == int(chr))
         df = df.with_columns(
             (
@@ -87,8 +83,7 @@ def sig_loci(
                         sum(
                             [
                                 (
-                                    (pl.col("start_region").cast(int) < i)
-                                    & (pl.col("end_region").cast(int) > i)
+                                    (500000>(abs(pl.col("pos").cast(int) - i)))
                                 )
                                 for i in chr_catalog["CHR_POS"]
                             ]
@@ -102,31 +97,18 @@ def sig_loci(
             )
         )
         merged_dfs.append(df)
+
     merged_df = pl.concat(merged_dfs, how="vertical")
+    merged_df = merged_df.rename({'ID':'STUDY_ID'})
 
     print(
         f"\n{merged_df.shape[0]} unique regions, based on {sig_data.shape[0]} variants with a pvalue less than 5e-8"
     )
-
     # Add regions to significant metal results
-    final_data = (
-        sig_data.join(merged_df, on="chr", how="inner")
-        .filter(
-            (pl.col("pos") >= pl.col("start_region"))
-            & (pl.col("pos") <= pl.col("end_region"))
-        )
-        .drop(["tmp", "counts"])
-    )
-
-    # Filter to retain most significant variant per region
-    lowest_pval = final_data.group_by(
-        ["chr", "start_region", "end_region"], maintain_order=True
-    ).agg(pl.col('P-value').min())
-    print(lowest_pval)
-    final_data = lowest_pval.join(
-        final_data, on=["chr", "start_region", "end_region", "P-value"]
-    ).unique(subset = ["chr", "start_region", "end_region", "P-value"], keep="first", maintain_order=True)
-
+    final_data = sig_data.join(merged_df, on="STUDY_ID", how="inner")
+    final_data = final_data.drop(["tmp", "counts", 'P-value']).rename({'P':'P-value'})
+    
+    #final_data = final_data.select('chr','start_region','end_region','P-value','STUDY_ID','Allele1','Allele2','Freq1','Effect','StdErr','Direction','per_variant_N','pos','ref_from_id','alt_from_id','pos_right','SP2','known_in_gwas_catalog')
     ################################################################################################
     # PART TWO:
     # Look for variants in the catalog that are within the boundaries of the found regions
@@ -136,6 +118,7 @@ def sig_loci(
             phenotype_catalog_path,
             separator="\t",
             null_values=["NA"],
+            dtypes={'CHR_ID':str},
             columns=[
                 "CHR_ID",
                 "CHR_POS",
@@ -146,11 +129,12 @@ def sig_loci(
                 "PUBMEDID",
                 "FIRST AUTHOR",
                 "LINK",
+                "DISEASE/TRAIT"
             ],
         )
         .rename({"CHR_ID": "chr", "P-VALUE": "CATALOG_PVALUE"})
         .with_columns((pl.col("chr").str.replace_all("X", "23")).alias("chr"))
-    )
+    ).filter(pl.col('CATALOG_PVALUE')<5e-8)
 
     ### Add Significant Data ###
 
@@ -186,6 +170,7 @@ def sig_loci(
             "SNPS",
             "CATALOG_PVALUE",
             "ID",
+            "DISEASE/TRAIT"
         ]
     )
 
@@ -195,6 +180,7 @@ def sig_loci(
 
     cols = annotated_catalog.drop("ID").columns
     for col in cols:
+        print(col)
         annotated_catalog = (
             annotated_catalog.with_columns(pl.col(col).list.unique().alias(col))
             .with_columns(
@@ -217,77 +203,20 @@ def sig_loci(
         ).alias("ID")
     )
 
-    final_result = pl.concat([final_data, annotated_catalog], how="align").with_columns(
+    final_result = final_data.join(annotated_catalog, on="ID", how = 'left').with_columns(
         pl.when(pl.col("start_region") < 0)
         .then(1)
         .otherwise(pl.col("start_region"))
         .alias("start_region")
     )
-    #final_result = final_result.drop('P-value').rename({'str_pval':'P-value'})
+
     final_result.write_csv(output_path, separator="\t")
 
 
 def _list_to_str(lst) -> str:
     lst = [f"{i}" for i in lst]
-    lst = list(set(lst))
+    lst = list(lst)
     return ";".join(lst)
-
-
-def _find_regions(
-    *,
-    sig_threshold: float,
-    raw_df: pl.DataFrame,
-    pval_col: str,
-    pos_col: str,
-    chr_col: str,
-    id_col: str,
-    flank: int = 500000,
-) -> pl.DataFrame:
-    # Filter data frame for significant variants only & sort by chr and pos
-    raw_df = (
-        raw_df.filter(pl.col(pval_col).cast(float) < sig_threshold)
-        .sort([chr_col, pos_col])
-        .with_columns(pl.col(chr_col).cast(int).alias(chr_col))
-        .with_columns(pl.col(pos_col).cast(int).alias(pos_col))
-    )
-
-    # Calcualte differences for all chr and pos in df
-    diff_chrom: np.ndarray = np.diff(raw_df[chr_col])
-
-    diff_pos: np.ndarray = np.diff(raw_df[pos_col])
-    # start = c(1, which(diff(y) != 0 | diff(x) <= (flank | diff(x) >= flank) + 1)
-    # end = c(start - 1, length(x))
-
-    # Define conditions
-    conditions: np.ndarray = (
-        (diff_chrom != 0) | (diff_pos <= (-1 * flank)) | (diff_pos >= flank)
-    )
-    conditions = np.append(True, conditions)
-
-    start_indices = np.where(conditions)[0]
-
-    end_indices = np.append(start_indices - 1, len(conditions) - 1)[1:]
-
-    starts = raw_df[id_col].gather(start_indices)
-
-    ends = raw_df[id_col].gather(end_indices)
-
-    # Assumes name column is chr:pos:ref:alt
-    extracted_start = np.array([int(x.split(":")[1]) for x in starts])
-    extracted_end = np.array([int(x.split(":")[1]) for x in ends])
-
-    # Print Summary
-    chrom = raw_df[chr_col][0]
-    print(f"chr{chrom} has {len(extracted_start)} distinct regions")
-    return pl.DataFrame(
-        {
-            "start_region": extracted_start - 500000,
-            "end_region": extracted_end + 500000,
-            "chr": np.array([str(chrom)] * len(extracted_start)),
-            "left_most_sig_var": starts,
-            "right_most_sig_var": ends,
-        }
-    )
 
 
 def _read_input(*, file: str, id_col: str) -> pl.DataFrame:
@@ -319,4 +248,5 @@ def _read_input(*, file: str, id_col: str) -> pl.DataFrame:
 
 if __name__ == "__main__":
     defopt.run(sig_loci)
+
 

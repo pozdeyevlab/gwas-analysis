@@ -35,6 +35,7 @@ humandb_dir: Path = Path(config["humandb_dir"])
 xref: Path = Path(config["xref"])
 prep_dir: Path = Path(config["prep_dir"])
 adj_dir: Path = Path(config["adj_dir"])
+ld_loci_dict: dict = config["ld_loci_dict"]
 
 # Filter Params
 biobank_min: int = config["biobank_min"]
@@ -104,6 +105,7 @@ class Munge:
     post_munge_cli: str
     gwas_catalog: str
     disease_prev: float
+    ld_loci_file: str
 
 
 def _find_tsv_files(directory):
@@ -211,6 +213,7 @@ for phenotype in list(set(map_df['PHENOTYPE'])):
         post_munge_cli=f"{output_dir}/cli_munge/{phenotype}.sumstats.gz",
         gwas_catalog=phenotype_catalog_dict[CATALOG_PHENOTYPE],
         disease_prev=disease_prevalence_dict[CATALOG_PHENOTYPE],
+        ld_loci_file=ld_loci_dict[CATALOG_PHENOTYPE]
     )
 
 ldsc_input_files = [munge[key].post_munge_cli for key, value in munge.items()] #if 'hypothyroidism' not in munge[key].post_munge_cli]
@@ -236,8 +239,7 @@ for i in range(len(ldsc_input_files)):
         population_prev=",".join(str(i) for i in disease_prev),
     )
 
-for key, value in inputs.items():
-	print(key)
+print([adj[x].input_file for x in adj.keys()])
 ################################################################################
 # Directives
 ################################################################################
@@ -290,22 +292,10 @@ rule all:
         [f'{adj_dir}/metal_results/{key}.metal' for key, value in adj.items()],
         [f'{adj_dir}/metal_results/{key}_1.tbl' for key, value in adj.items()],
         [f'{adj_dir}/metal_prep_adj/{key}.tsv' for key in adj],
-
         [f'{prep_dir}/metal_prep/{key}.tsv' for key, value in inputs.items()],
         [f'{output_dir}/metal_results/{key}.metal' for key in metal],
         [f'{output_dir}/metal_plots/{key}.png' for key in metal],
-        [f'{output_dir}/metal_summary/{key}.tsv' for key in metal],
-        [f'{output_dir}/metal_summary/{key}_raw.tsv' for key in metal],
-        [f'{output_dir}/annovar/{key}.tsv' for key in metal],
-        [f'{output_dir}/annovar/{key}_with_genes.hg38_multianno.txt' for key in metal],
-        [f'{output_dir}/final_summary_with_genes/{key}_with_genes_and_regions.tsv' for key in metal],
-        [f'{output_dir}/metal_results/{key}_1.tbl' for key in metal],
-        [f'{output_dir}/significant_loci/{key}_significant_loci.tsv' for key, value in munge.items()],
-        [f'{output_dir}/ldsc_pre_munge/{key}_with_rsid.tsv' for key, value in munge.items()],
-        [f'{output_dir}/cli_munge/{key}.sumstats.gz' for key, value in munge.items()],
-        [f'{output_dir}/cli_ldsc/{key}.log' for key, value in munge.items()],
-        [f'{output_dir}/cli_ldsc_matrix/{key}.log' for key, value in matrix.items()],
-
+        [f'{output_dir}/metal_results/{key}_1.tbl' for key in metal]
 
 rule prep_files_adj:
     params:
@@ -662,7 +652,8 @@ rule significant_loci:
         disease = lambda wc: wc.munge,
     input:
         phenotype_catalog_path = lambda wc: munge[wc.munge].gwas_catalog,
-        output = lambda wc: munge[wc.munge].metal_output_file
+        output = lambda wc: munge[wc.munge].metal_output_file,
+        ld_loci = lambda wc: munge[wc.munge].ld_loci_file
     output:
         out_prep = "{output_dir}/significant_loci/{munge}_significant_loci.tsv",
     log:
@@ -672,6 +663,7 @@ rule significant_loci:
     shell:
         "python modules/significant_loci.py "
         "--input-file {input.output} "
+        "--ld-file {input.ld_loci} "
         "--significance-threshold {params.sig_threshold} "
         "--phenotype-catalog-path {input.phenotype_catalog_path} "
         "--output-path {output.out_prep} &> {log}"
