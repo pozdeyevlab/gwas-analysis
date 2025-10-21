@@ -50,14 +50,6 @@ def plot(
     # Filter aligned variants for all possible qc values
     combined_df = combined_df.filter((pl.col("FILTER") == "PASS"))
 
-    # Prepare data for palindromic and filter scatterplots
-    ref_eaf_non_palindromic = combined_df.filter(
-        pl.col("gwas_is_palindromic") == False
-    )["AF_gnomad"]
-    ref_eaf_palindromic = combined_df.filter(pl.col("gwas_is_palindromic") == True)[
-        "AF_gnomad"
-    ]
-
     # Set up scatterplot figure
     figure, axes = plt.subplots(nrows=3, ncols=2, figsize=(40, 40))
 

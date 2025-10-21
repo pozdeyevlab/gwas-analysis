@@ -25,7 +25,6 @@ from typing import Optional, Union
 
 import attr
 import defopt
-import numpy as np
 import polars as pl
 
 # pylint: disable=R0914, R0913, R0903, C0301
@@ -233,11 +232,11 @@ def filter_summary_stats(
     raw_df = raw_df.with_columns(
         pl.col(found_columns.variant_id)
         .str.split(":")
-        .map_elements(lambda arr: arr[2])
+        .apply(lambda arr: arr[2])
         .alias("Non_Effect_Allele_From_ID"),
         pl.col(found_columns.variant_id)
         .str.split(":")
-        .map_elements(lambda arr: arr[3])
+        .apply(lambda arr: arr[3])
         .alias("Effect_Allele_From_ID"),
     )
 
@@ -278,13 +277,13 @@ def filter_summary_stats(
     # Transcribe effect and non-effect allele
     raw_df = raw_df.with_columns(
         pl.col(found_columns.effect_allele)
-        .map_elements(_transcribe_alleles)
+        .apply(_transcribe_alleles)
         .alias(found_columns.transcribed_effect_allele)
     )
 
     raw_df = raw_df.with_columns(
         pl.col(found_columns.non_effect_allele)
-        .map_elements(_transcribe_alleles)
+        .apply(_transcribe_alleles)
         .alias(found_columns.transcribed_non_effect_allele)
     )
 
@@ -318,7 +317,7 @@ def filter_summary_stats(
     total = filter_end - filter_start
     print(f"\nColumn Map for chr{chromosome}:\n{found_columns}\n")
     print(f"Completed reading and filtering {gwas_results} chr{chromosome} in {total}")
-    print(final_results)
+
     return final_results
 
 

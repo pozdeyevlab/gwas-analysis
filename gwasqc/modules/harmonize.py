@@ -18,13 +18,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
-import align_non_palindromic_variants
-import align_palindromic_variants
 import attr
 import defopt
-import filter_gwas
-import get_gnomad_ref
 import polars as pl
+
+from modules import (
+    align_non_palindromic_variants,
+    align_palindromic_variants,
+    filter_gwas,
+    get_gnomad_ref,
+)
 
 # pylint: disable=C0301 # line too long
 # pylint: disable=R0914 # too many local variables
@@ -120,6 +123,9 @@ def harmonize(
     print(f"\nStarting harmonization for chr{chromosome}:")
 
     # Based on chromosome, read in the corresponding gnomad reference and find appropriate AN and AF columns
+
+    # EXCEED has 1-22 and 23 which is listed as 'X' when looking at the 'ID' col
+
     if chromosome == 23:
         chromosome = "X"
         gwas_pl = gwas_pl.with_columns(

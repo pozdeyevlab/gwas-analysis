@@ -56,15 +56,13 @@ def calculate(
             .otherwise(pl.lit("No"))
             .alias("outlier_stdev")
         )
-        .with_columns(mahalanobis_mean=avg["mahalanobis"][0])
-        .with_columns(mahalanobis_stdev=std["mahalanobis"][0])
+        .with_columns(mahalanobis_mean=avg["mahalanobis"])
+        .with_columns(mahalanobis_stdev=std["mahalanobis"])
     )
 
     # Calcualte outlier as pval < 0.001
     aligned_pl = aligned_pl.with_columns(
-        mahalanobis_pval=(
-            1 - aligned_pl["mahalanobis"].map_elements(lambda x: chi2.cdf(x, 1))
-        )
+        mahalanobis_pval=(1 - aligned_pl["mahalanobis"].apply(lambda x: chi2.cdf(x, 1)))
     )
     aligned_pl = aligned_pl.with_columns(
         pl.when(pl.col("mahalanobis_pval") < 0.001)

@@ -7,9 +7,10 @@ from typing import List, Optional
 
 import attr
 import defopt
-import filter_gwas
 import numpy as np
 import polars as pl
+
+from modules import filter_gwas
 
 # pylint: disable=C0301 # line too long
 # pylint: disable=R0914 # too many local variables

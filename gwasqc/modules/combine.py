@@ -4,9 +4,9 @@ from pathlib import Path
 from typing import List
 
 import defopt
-import mahalanobis
-import matplotlib.pyplot as plt
 import polars as pl
+
+from modules import mahalanobis
 
 # pylint: disable=C0301 # line too long
 # pylint: disable=R0914 # Too many local variables
@@ -90,10 +90,7 @@ def _combine_files(files, gnomad_flag_dir):
         if len(cols_to_add) > 0:
             for col in list(cols_to_add):
                 df = df.with_columns((pl.lit(None).cast(str)).alias(col))
-        cols = df.columns
-        for c in ["#chrom", "chromosome", "CHR", "CHROM"]:
-            if c in cols:
-                df = df.drop(c)
+        df = df.drop(["#chrom", "chromosome", "CHR", "CHROM"])
         fixed_dfs.append(df)
     concat_df = pl.concat(fixed_dfs, how="align")
     print(concat_df)

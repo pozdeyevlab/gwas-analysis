@@ -1,7 +1,7 @@
 """
 Align non-palindromic variants
 
-This module is used to align non-palindromic variants.
+This module is used to align non-palindromic variants. 
 In order to compare variants from multiple biobanks it is crucial to align variants to a common reference. This module handles non-palindromic variants and checks for the following scenarios:
 
 1) Exact match - study reference == gnoamd reference & study alternate == gnomad alternate
@@ -9,10 +9,10 @@ In order to compare variants from multiple biobanks it is crucial to align varia
 3) Exact transcribed match - transcribed study reference == gnoamd reference & transcribed study alternate == gnomad alternate
 4) Inverse transcribed match - transcribed study reference == gnoamd alternate & transcribed study alternate == gnomad reference
 
-This module also handles complementary variants. Meaning a study variant in whcih both exact and inverse matches are valid gnomad variants. In these cases the gnoamd variant with the allele frequency closest to the study frequency is assigned as the true match.
+This module also handles complementary variants. Meaning a study variant in whcih both exact and inverse matches are valid gnomad variants. In these cases the gnoamd variant with the allele frequency closest to the study frequency is assigned as the true match. 
 
 Alignment Logic:
-In order to avoid OOM errors this module uses set comparison to determine matches between the study and gnomad. For each possible match (exact, inverse, exact transcribed, and inverse transcribed) two sets of variant ID's are created. The first is consisted for all scenarios, the gnomad set, the second changes according to the scenario, this is from the study. The set intersection is used to create an new data frame, and the alignment method writted to the column 'Alignment Method'. After all scenarios have been checked data frames containing
+In order to avoid OOM errors this module uses set comparison to determine matches between the study and gnomad. For each possible match (exact, inverse, exact transcribed, and inverse transcribed) two sets of variant ID's are created. The first is consisted for all scenarios, the gnomad set, the second changes according to the scenario, this is from the study. The set intersection is used to create an new data frame, and the alignment method writted to the column 'Alignment Method'. After all scenarios have been checked data frames containing 
 """
 
 from collections import namedtuple
@@ -20,9 +20,10 @@ from typing import List, Optional
 
 import attr
 import defopt
-import filter_gwas
 import numpy as np
 import polars as pl
+
+from modules import filter_gwas
 
 # pylint: disable=C0301
 # pylint: disable=R0914 # too many local variables
